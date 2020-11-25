@@ -147,7 +147,8 @@ class Energy_Fitter():
 		deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
 		deltaE.GetXaxis().SetRangeUser(-.4*E[-1],.4*Emax[-1])
 		#fitted_hist.SaveAs("deltaE.root")
-		c_all.SaveAs("Gaussian_fit_%s.png"%medium_save)
+		save_dir = self.make_directory(medium_save)
+		c_all.SaveAs("%s/Gaussian_fit_%s.png"%(save_dir,medium_save))
 
 		#self.bonsai_t.Draw(graph_vs_E,conditions)
 		#deltaE_vs_E = root.gDirectory.Get("deltaE_vs_E")
@@ -179,7 +180,8 @@ class Energy_Fitter():
 		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		E = E[1:]
-		for i in range(len(E_cut)):
+		save_dir = self.make_directory(medium_save)
+		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
 			#canvas_name = "c_%i" % i
 			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
 			condition = "%s && %s" %(conditions,E_cut[i])
@@ -191,8 +193,8 @@ class Energy_Fitter():
 			deltaE.SetTitle("E = %f %s" % (E[i],medium))
 			#deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
 			#deltaE.GetXaxis().SetRangeUser(-.4*E[i],.4*Emax[i])
-			c1.SaveAs("Gaussian_fit_%s_%s.png"%(medium_save,E[i]))
-			with open("stats_%s.txt" % medium_save,'a') as stats:
+			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]))
+			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy = %f\n" % E[i])
 				stats.write("sigma = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(2)))
 				stats.write("mean = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(1)))
@@ -207,17 +209,28 @@ class Energy_Fitter():
 		else:
 			return root.TFile(arg, type)
 
+	def make_directory(self,medium_save):
+		
+		if os.path.isdir("../%s_%f" % (medium_save,self.interval)):
+			print("../%s_%f exists" % (medium_save,self.interval))
+		else:
+			os.mkdir("../%s_%f" % (medium_save,self.interval))
+		save_dir = "../%s_%f" % (medium_save,self.interval)
+		return save_dir
+
 	def read_from_tree(self, br_name):
 		# Read values of branch br_name from bonsai tree into np array
 		values = self.bonsai_t.AsMatrix(columns=[br_name])
 		return values
 
 	def make_fit(self, estimator, conditions):
+		medium,medium_save = self.medium_detect()
 		c1 = TCanvas( "c1" , "Fit Production", 200, 10, 700 ,500)
 		self.bonsai_t.Draw(estimator+":mc_energy>>hist", conditions, "goff")
 		hist = root.gDirectory.Get("hist")
 		hist.Fit("pol2", "goff")
-		c1.SaveAs("fit_production.png")
+		save_dir = self.make_directory(medium_save)
+		c1.SaveAs("%s/fit_production.png"%save_dir)
 		p0_root = hist.GetFunction("pol2").GetParameter(0)
 		p1_root = hist.GetFunction("pol2").GetParameter(1)
 		p2_root = hist.GetFunction("pol2").GetParameter(2)
