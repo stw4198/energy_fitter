@@ -90,8 +90,6 @@ class Energy_Fitter():
 		return (medium,medium_save)
 
 
-#Calculations here inc. loop
-
 	def nX_extraction(self):
 		b_nentry = self.bonsai_t.GetEntries()
 		nX_values = []
@@ -109,16 +107,16 @@ class Energy_Fitter():
 	def resolution_testing(self):
 		medium,medium_save = self.medium_detect()
 		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
-		fit = self.make_fit(self.nwindow,conditions)
+		fit,fit_err = self.make_fit(conditions)
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		save_dir = self.make_directory(medium_save)
 		try:
 			os.remove("%s/stats_%s.txt" % (save_dir,medium_save))
 		except:
 			print("%s/stats_%s.txt not found" % (save_dir,medium_save))
-
-		#c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
 		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
+		#graph_lower = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaElower" % (self.nwindow,self.nwindow,fit[2]-fit_err[2],self.nwindow,fit[1]-fit_err[1],fit[0]))
+		#graph_upper = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaEupper" % (self.nwindow,self.nwindow,fit[2]+fit_err[2],self.nwindow,fit[1]+fit_err[1],fit[0]))
 		gROOT.SetBatch(True)
 		c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
 		self.bonsai_t.Draw(graph,conditions)
@@ -139,25 +137,53 @@ class Energy_Fitter():
 		with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 			stats.write("Medium = %s\n" % medium)
 			stats.write("p0 = %.5e\n" % fit[0])
+			stats.write("p0 error = +/- %.5e\n" % fit_err[0])
 			stats.write("p1 = %.5e\n" % fit[1])
+			stats.write("p1 error = +/- %.5e\n" % fit_err[1])
 			stats.write("p2 = %.5e\n" % fit[2])
+			stats.write("p2 error = +/- %.5e\n" % fit_err[2])
 		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
 			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
 			condition = "%s && %s" %(conditions,E_cut[i])
-			print(condition)
 			self.bonsai_t.Draw(graph,condition)
 			deltaE = root.gDirectory.Get("deltaE")
-			deltaE.Fit("gaus")
+			deltaE.Fit("gaus","E")
 			gStyle.SetOptFit(11)
-			deltaE.SetTitle("E_{centre} = %f MeV (%f MeV interval) %s" % (E[i],self.interval,medium))
+			deltaE.SetTitle("E_{centre} = %f MeV (%f MeV range) %s" % (E[i],self.interval,medium))
 			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]))
+			#del c1
+			#c_upper = TCanvas("c_upper" , "Delta E "+medium, 200, 10, 700 ,500)
+			#self.bonsai_t.Draw(graph_upper,condition)
+			#deltaEupper = root.gDirectory.Get("deltaEupper")
+			#deltaEupper.Fit("gaus")
+			#c_upper.SaveAs("%s/Gaussian_fit_%s_%s_upper.png"% (save_dir,medium_save,E[i]))
+			#del c_upper
+			#c_lower = TCanvas("c_lower" , "Delta E "+medium, 200, 10, 700 ,500)
+			#self.bonsai_t.Draw(graph_lower,condition)
+			#deltaElower = root.gDirectory.Get("deltaElower")
+			#deltaElower.Fit("gaus")
+			#c_lower.SaveAs("%s/Gaussian_fit_%s_%s_lower.png"% (save_dir,medium_save,E[i]))
+			#del c_lower
+
+			sigma = deltaE.GetFunction("gaus").GetParameter(2)
+			sigma_err = deltaE.GetFunction("gaus").GetParError(2)
+			mean = deltaE.GetFunction("gaus").GetParameter(1)
+			mean_err = deltaE.GetFunction("gaus").GetParError(1)
+			resolution = deltaE.GetFunction("gaus").GetParameter(2)/E[i]
+			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2)
+
 			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy [MeV] = %f\n" % E[i])
 				stats.write("Energy range [MeV] = +/- %f\n" % float(0.5*self.interval))
-				stats.write("sigma [MeV] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(2)))
-				stats.write("mean [MeV] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(1)))
-				stats.write("resolution [\u03C3/E] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(2)/E[i]))
+				stats.write("sigma [MeV] = %f\n" % sigma)
+				stats.write("sigma error [MeV] = +/- %f\n" % sigma_err)
+				stats.write("mean [MeV] = %f\n" % mean)
+				stats.write("mean error [MeV] = +/- %f\n" % mean_err)
+				stats.write("resolution [\u03C3/E] = %f\n" % resolution)
+				stats.write("resolution error = +/- %f\n" % resolution_err)
 			del c1
+			#del c_upper
+			#del c_lower
 
 
 	@staticmethod
@@ -181,11 +207,11 @@ class Energy_Fitter():
 		values = self.bonsai_t.AsMatrix(columns=[br_name])
 		return values
 
-	def make_fit(self, estimator, conditions):
+	def make_fit(self, conditions):
 		medium,medium_save = self.medium_detect()
 		gROOT.SetBatch(True)
 		c1 = TCanvas( "c1" , "Fit Production", 200, 10, 700 ,500)
-		self.bonsai_t.Draw(estimator+":mc_energy>>hist", conditions, "goff")
+		self.bonsai_t.Draw(self.nwindow+":mc_energy>>hist", conditions, "goff")
 		hist = root.gDirectory.Get("hist")
 		hist.Fit("pol2", "goff")
 		hist.GetXaxis().SetTitle("E_{True} [MeV]")
@@ -193,6 +219,8 @@ class Energy_Fitter():
 		hist.SetTitle("Production of fit between E_{True} and %s"%self.nwindow)
 		save_dir = self.make_directory(medium_save)
 		c1.SaveAs("%s/fit_production.png"%save_dir)
+		
+		#ROOT fit from E to nwindow
 		p0_root = hist.GetFunction("pol2").GetParameter(0)
 		p1_root = hist.GetFunction("pol2").GetParameter(1)
 		p2_root = hist.GetFunction("pol2").GetParameter(2)
@@ -201,13 +229,69 @@ class Energy_Fitter():
 		p2_root_err = hist.GetFunction("pol2").GetParError(2)
 
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
+
+		#optimal fit from nwindow to E
 		n100_fit = p2_root*E**2 + p1_root*E + p0_root
-		new_fit, new_residuals, _, _, _ = np.polyfit(n100_fit,E,2,full=True) #Find errors here
+		new_fit, new_error_matrix = np.polyfit(n100_fit,E,2,cov=True) #Find errors here
 		p0 = new_fit[2]
 		p1 = new_fit[1]
 		p2 = new_fit[0]
 		fit = (p0, p1, p2)
-		return (fit)
+		new_error = np.sqrt(np.diag(new_error_matrix))
+		p0_err = new_error[2]
+		p1_err = new_error[1]
+		p2_err = new_error[0]
+
+		#upperbound fit from nwindow to E
+		n100_2 = (p2_root - p2_root_err)*E**2 + (p1_root-p1_root_err)*E + (p0_root-p0_root_err)
+		new_fit_2,new_error_matrix_2 = np.polyfit(n100_2,E,2,cov=True)
+		p0_2 = new_fit_2[2]
+		p1_2 = new_fit_2[1]
+		p2_2 = new_fit_2[0]
+		new_error_2 = np.sqrt(np.diag(new_error_matrix_2))
+		p0_err_2 = new_error_2[2]
+		p1_err_2 = new_error_2[1]
+		p2_err_2 = new_error_2[0]
+
+		#lowerbound fit from nwindow to E
+		n100_3 = (p2_root + p2_root_err)*E**2 + (p1_root+p1_root_err)*E + (p0_root+p0_root_err)
+		new_fit_3,new_error_matrix_3 = np.polyfit(n100_3,E,2,cov=True)
+		p0_3 = new_fit_3[2]
+		p1_3 = new_fit_3[1]
+		p2_3 = new_fit_3[0]
+		new_error_3 = np.sqrt(np.diag(new_error_matrix_3))
+		p0_err_3 = new_error_3[2]
+		p1_err_3 = new_error_3[1]
+		p2_err_3 = new_error_3[0]
+
+		if abs(p0_2 + p0_err_2 - p0) >= (p0 - p0_3 - p0_err_3):
+			p0_err_t = abs(p0_2 + p0_err_2 - p0)
+		elif abs(p0_2 + p0_err_2 - p0) <= (p0 - p0_3 - p0_err_3):
+			p0_err_t = abs(p0 - p0_3 - p0_err_3)
+		else:
+			print("\nCouldn't propagate p0 error\n")
+
+		if abs(p1_2 + p1_err_2 - p1) >= (p1 - p1_3 - p1_err_3):
+			p1_err_t = abs(p1_2 + p1_err_2 - p1)
+		elif abs(p1_2 + p1_err_2 - p1) <= (p1 - p1_3 - p1_err_3):
+			p1_err_t = abs(p1 - p1_3 - p1_err_3)
+		else:
+			print("\nCouldn't propagate p1 error\n")
+
+		if abs(p2_2 + p2_err_2 - p2) >= (p2 - p2_3 - p2_err_3):
+			p2_err_t = abs(p2_2 + p2_err_2 - p2)
+		elif abs(p2_2 + p2_err_2 - p2) <= (p2 - p2_3 - p2_err_3):
+			p2_err_t = abs(p2 - p2_3 - p2_err_3)
+		else:
+			print("\nCouldn't propagate p2 error\n")
+
+		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (p0,p0_err_t,p1,p1_err_t,p2,p2_err_t))
+
+		fit_err = (p0_err_t,p1_err_t,p2_err_t)
+		return (fit,fit_err)
+
+		
+
 
 	def energy_values(self,interval):
 		mc_energy = self.read_from_tree("mc_energy")
@@ -245,4 +329,4 @@ if __name__ == "__main__":
 	energy_fitter = Energy_Fitter()
 	energy_fitter.parse_options()
 	energy_fitter.resolution_testing()
-
+	
