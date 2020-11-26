@@ -109,23 +109,58 @@ class Energy_Fitter():
 		return(nX_values)
 
 	def resolution_testing(self):
-		b_nentry = self.bonsai_t.GetEntries()
+		medium,medium_save = self.medium_detect()
 		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
-		fit,Emax,E = self.make_fit(self.nwindow,conditions)
-		E_pos = E[1:]
-		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>fitted_hist" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
-		for i in range(len(E_pos)):
-			#print("E_entry = ", E_entry, "E_event = ", E_event)
-			discrete_conditions = "closestPMT > 0 && "+self.nwindow+" > 0 && mc_energy == "+str(E[i+1])
-			self.bonsai_t.Draw(graph,discrete_conditions)
-			fitted_hist = root.gDirectory.Get("fitted_hist")
-			fitted_hist.Fit("gaus")
-			fitted_hist.SaveAs("Fitted_hist_%i.C"%i)
-			print(graph,discrete_conditions)
-			with open("stats.txt",'a') as stats:
-				stats.write("\nEnergy = %f\n" % E_pos[i])
-				stats.write("sigma = %s\n" % str(fitted_hist.GetFunction("gaus").GetParameter(2)))
-				stats.write("mean = %s\n" % str(fitted_hist.GetFunction("gaus").GetParameter(1)))
+		fit = self.make_fit(self.nwindow,conditions)
+		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
+		save_dir = self.make_directory(medium_save)
+		try:
+			os.remove("%s/stats_%s.txt" % (save_dir,medium_save))
+		except:
+			print("%s/stats_%s.txt not found" % (save_dir,medium_save))
+
+		#c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
+		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
+		gROOT.SetBatch(True)
+		c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
+		self.bonsai_t.Draw(graph,conditions)
+		deltaE = root.gDirectory.Get("deltaE")
+		deltaE.Fit("gaus")
+		gStyle.SetOptFit(11)
+		deltaE.SetTitle("#DeltaE %s" % medium)
+		deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
+		deltaE.GetXaxis().SetRangeUser(-.4*E[-1],.4*Emax[-1])
+		c_all.SaveAs("%s/Gaussian_fit_%s.png"%(save_dir,medium_save))
+
+		del c_all
+		del deltaE
+
+		c1 = TCanvas( "c1" , "Delta E "+medium, 200, 10, 700 ,500)
+		E = E[1:]
+
+		with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
+			stats.write("Medium = %s\n" % medium)
+			stats.write("p0 = %.5e\n" % fit[0])
+			stats.write("p1 = %.5e\n" % fit[1])
+			stats.write("p2 = %.5e\n" % fit[2])
+		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
+			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
+			condition = "%s && %s" %(conditions,E_cut[i])
+			print(condition)
+			self.bonsai_t.Draw(graph,condition)
+			deltaE = root.gDirectory.Get("deltaE")
+			deltaE.Fit("gaus")
+			gStyle.SetOptFit(11)
+			deltaE.SetTitle("E_{centre} = %f MeV (%f MeV interval) %s" % (E[i],self.interval,medium))
+			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]))
+			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
+				stats.write("\nEnergy [MeV] = %f\n" % E[i])
+				stats.write("Energy range [MeV] = +/- %f\n" % float(0.5*self.interval))
+				stats.write("sigma [MeV] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(2)))
+				stats.write("mean [MeV] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(1)))
+				stats.write("resolution [\u03C3/E] = %s\n" % str(deltaE.GetFunction("gaus").GetParameter(2)/E[i]))
+			del c1
+
 
 	def apply_fit_all(self):
 		medium,medium_save = self.medium_detect()
@@ -225,10 +260,14 @@ class Energy_Fitter():
 
 	def make_fit(self, estimator, conditions):
 		medium,medium_save = self.medium_detect()
+		gROOT.SetBatch(True)
 		c1 = TCanvas( "c1" , "Fit Production", 200, 10, 700 ,500)
 		self.bonsai_t.Draw(estimator+":mc_energy>>hist", conditions, "goff")
 		hist = root.gDirectory.Get("hist")
 		hist.Fit("pol2", "goff")
+		hist.GetXaxis().SetTitle("E_{True} [MeV]")
+		hist.GetYaxis().SetTitle(self.nwindow)
+		hist.SetTitle("Production of fit between E_{True} and %s"%self.nwindow)
 		save_dir = self.make_directory(medium_save)
 		c1.SaveAs("%s/fit_production.png"%save_dir)
 		p0_root = hist.GetFunction("pol2").GetParameter(0)
@@ -253,7 +292,7 @@ class Energy_Fitter():
 		E = np.arange(0,Emax+interval,interval)
 		E_cut = []
 		for i in range(len(E)):
-			E_cut.append("mc_energy > %f && mc_energy < %f" % (E[i]-interval,E[i]+interval))
+			E_cut.append("mc_energy > %f && mc_energy < %f" % (E[i]-0.5*interval,E[i]+0.5*interval))
 		return(mc_energy,Emax,E,E_cut[1:])
 		
 	
@@ -274,8 +313,8 @@ if __name__ == "__main__":
 	energy_fitter = Energy_Fitter()
 	energy_fitter.parse_options()
 	#energy_fitter.nX_extraction()
-	#energy_fitter.resolution_testing()
-	energy_fitter.apply_fit_all()
-	energy_fitter.apply_fit_discrete()
+	energy_fitter.resolution_testing()
+	#energy_fitter.apply_fit_all()
+	#energy_fitter.apply_fit_discrete()
 	#energy_fitter.energy_values(0.1)
 
