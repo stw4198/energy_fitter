@@ -32,19 +32,17 @@ class Energy_Fitter():
 		parser = argparse.ArgumentParser()
 		parser.add_argument("bonsai_fn", help="filepath to the bonsai file \
 			containing reconstructed events", type=str)
-		parser.add_argument("--nwindow", help="the time window for nhits \
-			relative to current PMT hit time in ns, typically \
-			a negative number or zero \
+		parser.add_argument("--nwindow", help="the time window for nhits in ns\
 			(default: n100)", type=str, default='n100')
-		parser.add_argument("--interval", help="Energy interval for \
-			calculating resolution \
+		parser.add_argument("--interval", help="energy interval for \
+			calculating resolution in MeV \
 			(default: 0.5)", type=float, default=0.5)
 		parser.add_argument("--medium", help="specify the detection medium \
-			(default: water)",
+			(default: none)",
 			type=str, choices=['none','water', 'wbls1pct',
 					'wbls3pct', 'wbls5pct'],
                             default='none')
-		parser.add_argument("--fitter", help="specify which fitter to analyse: \
+		parser.add_argument("--fitter", help="specify which fitter to analyse (N/A): \
 					bonsai, qfit or MC \
 					(default: bonsai)", type=str, default='bonsai')
 		args = parser.parse_args(argv)
@@ -294,6 +292,15 @@ class Energy_Fitter():
 		for i in range(len(E)):
 			E_cut.append("mc_energy > %f && mc_energy < %f" % (E[i]-0.5*interval,E[i]+0.5*interval))
 		return(mc_energy,Emax,E,E_cut[1:])
+
+	def write_to_tree(self, values, br_name):
+		# write values to bonsai tree under branch br_name
+		vals_to_write = np.empty((1), dtype="double")
+		branch = self.bonsai_t.Branch(br_name, vals_to_write, br_name+"/D")
+		for value in values:
+			vals_to_write[0] = value
+			branch.Fill()
+		self.bonsai_file.Write("", root.TFile.kOverwrite)
 		
 	
 	@staticmethod
