@@ -20,13 +20,12 @@ np.set_printoptions(suppress=True)
 class Energy_Fitter():
 
 	def __init__(self, bonsai_fn=None, nwindow = None, interval = None,
-		medium=None, fitter=None, mono=None, load_lib=True):
+		medium=None, fitter=None, load_lib=True):
 		self.bonsai_fn = bonsai_fn
 		self.nwindow = nwindow
 		self.interval = interval
 		self.medium = medium
 		self.fitter = fitter
-		self.mono = mono
 		self.load_lib = load_lib
 
 	def parse_options(self, argv=None):
@@ -46,9 +45,6 @@ class Energy_Fitter():
 		parser.add_argument("--fitter", help="specify which fitter to analyse (N/A): \
 					bonsai, qfit or MC \
 					(default: bonsai)", type=str, default='bonsai')
-		parser.add_argument("--mono", help="use mono energetic particles, \
-					assumes file contains monoenergetic particles ONLY",
-					type=int,choices=[0,1],default=0)
 		args = parser.parse_args(argv)
 		if self.load_lib:
 			root.gSystem.Load('libRATEvent.so')
@@ -59,13 +55,7 @@ class Energy_Fitter():
 		self.interval = args.interval
 		self.medium = args.medium
 		self.fitter = args.fitter
-		self.mono = args.mono
 		self.get_file_data()
-
-		if self.mono == 1:
-			print("Using monoenergetic events")
-		else:
-			print("Using flat spectrum events")
 
 	def get_file_data(self):
 		self.bonsai_t = self.bonsai_file.Get("data")
@@ -148,6 +138,7 @@ class Energy_Fitter():
 			stats.write("p1 error = +/- %.5e\n" % fit_err[1])
 			stats.write("p2 = %.5e\n" % fit[2])
 			stats.write("p2 error = +/- %.5e\n" % fit_err[2])
+
 		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
 			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
 			condition = "%s && %s" %(conditions,E_cut[i])
