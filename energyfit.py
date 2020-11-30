@@ -1,7 +1,7 @@
 import argparse
 import os
-import pdb
-import sys
+#import pdb
+#import sys
 from tqdm import tqdm
 import numpy as np
 try:
@@ -267,16 +267,9 @@ class Energy_Fitter():
 		else:
 			print("\nCouldn't propagate p2 error\n")
 
-		#print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (p0,p0_err_t,p1,p1_err_t,p2,p2_err_t))
-
 		fit_err = (p0_err_t,p1_err_t,p2_err_t)
-		#fit_err = (p0_root_err,p1_root_err,p2_root_err)
 
 		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]*p0_root_err/p0_root),fit[1],abs(fit_err[1]*p1_root_err/p1_root),fit[2],abs(fit_err[2]*p2_root_err/p2_root)))
-
-		#fit_err_scale = np.sqrt( ((fit_err[2]*p2_root_err/p2_root)/fit[2])**2 + ((fit_err[1]*p1_root_err/p1_root)/fit[1])**2 )
-		#fit_err_scale = np.sqrt((fit[2]*p2_root_err/p2_root)**2+(fit[1]*p1_root_err/p1_root)**2)
-		#fit_err_scale = np.sqrt((fit_err[2]/fit[2])**2+(fit_err[1]/fit[1])**2)
 
 		fit_err_scale = 2*p2_err_t + p1_err_t #Lyons textbook
 
