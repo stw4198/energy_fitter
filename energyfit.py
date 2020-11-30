@@ -20,12 +20,13 @@ np.set_printoptions(suppress=True)
 class Energy_Fitter():
 
 	def __init__(self, bonsai_fn=None, nwindow = None, interval = None,
-		medium=None, fitter=None, load_lib=True):
+		medium=None, fitter=None, mono=None, load_lib=True):
 		self.bonsai_fn = bonsai_fn
 		self.nwindow = nwindow
 		self.interval = interval
 		self.medium = medium
 		self.fitter = fitter
+		self.mono = mono
 		self.load_lib = load_lib
 
 	def parse_options(self, argv=None):
@@ -45,6 +46,9 @@ class Energy_Fitter():
 		parser.add_argument("--fitter", help="specify which fitter to analyse (N/A): \
 					bonsai, qfit or MC \
 					(default: bonsai)", type=str, default='bonsai')
+		parser.add_argument("--mono", help="use mono energetic particles, \
+					assumes file contains monoenergetic particles ONLY",
+					type=int,choices=[0,1],default=0)
 		args = parser.parse_args(argv)
 		if self.load_lib:
 			root.gSystem.Load('libRATEvent.so')
@@ -55,7 +59,13 @@ class Energy_Fitter():
 		self.interval = args.interval
 		self.medium = args.medium
 		self.fitter = args.fitter
+		self.mono = args.mono
 		self.get_file_data()
+
+		if self.mono == 1:
+			print("Using monoenergetic events")
+		else:
+			print("Using flat spectrum events")
 
 	def get_file_data(self):
 		self.bonsai_t = self.bonsai_file.Get("data")
@@ -101,13 +111,12 @@ class Energy_Fitter():
 		for b_entry, b_event in enumerate(tqdm(self.bonsai_t, total=b_nentry)):
 			nX_extract = b_event.n100 #Calling this nX sets it to literal nX branch
 			nX_values.append(nX_extract)
-		#print(nX_values[10],nX_values[-5],nX_values[-7])
 		return(nX_values)
 
 	def resolution_testing(self):
 		medium,medium_save = self.medium_detect()
 		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
-		fit,fit_err = self.make_fit(conditions)
+		fit,fit_err,fit_err_scale = self.make_fit(conditions)
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		save_dir = self.make_directory(medium_save)
 		try:
@@ -115,8 +124,6 @@ class Energy_Fitter():
 		except:
 			print("%s/stats_%s.txt not found" % (save_dir,medium_save))
 		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
-		#graph_lower = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaElower" % (self.nwindow,self.nwindow,fit[2]-fit_err[2],self.nwindow,fit[1]-fit_err[1],fit[0]))
-		#graph_upper = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaEupper" % (self.nwindow,self.nwindow,fit[2]+fit_err[2],self.nwindow,fit[1]+fit_err[1],fit[0]))
 		gROOT.SetBatch(True)
 		c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
 		self.bonsai_t.Draw(graph,conditions)
@@ -131,7 +138,6 @@ class Energy_Fitter():
 		del c_all
 		del deltaE
 
-		c1 = TCanvas( "c1" , "Delta E "+medium, 200, 10, 700 ,500)
 		E = E[1:]
 
 		with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
@@ -150,27 +156,14 @@ class Energy_Fitter():
 			deltaE.Fit("gaus","Q")
 			gStyle.SetOptFit(11)
 			deltaE.SetTitle("E_{centre} = %f MeV (%f MeV range) %s" % (E[i],self.interval,medium))
-			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]),"Q")
-			#del c1
-			#c_upper = TCanvas("c_upper" , "Delta E "+medium, 200, 10, 700 ,500)
-			#self.bonsai_t.Draw(graph_upper,condition)
-			#deltaEupper = root.gDirectory.Get("deltaEupper")
-			#deltaEupper.Fit("gaus")
-			#c_upper.SaveAs("%s/Gaussian_fit_%s_%s_upper.png"% (save_dir,medium_save,E[i]))
-			#del c_upper
-			#c_lower = TCanvas("c_lower" , "Delta E "+medium, 200, 10, 700 ,500)
-			#self.bonsai_t.Draw(graph_lower,condition)
-			#deltaElower = root.gDirectory.Get("deltaElower")
-			#deltaElower.Fit("gaus")
-			#c_lower.SaveAs("%s/Gaussian_fit_%s_%s_lower.png"% (save_dir,medium_save,E[i]))
-			#del c_lower
+			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]))
 
 			sigma = deltaE.GetFunction("gaus").GetParameter(2)
 			sigma_err = deltaE.GetFunction("gaus").GetParError(2)
 			mean = deltaE.GetFunction("gaus").GetParameter(1)
 			mean_err = deltaE.GetFunction("gaus").GetParError(1)
 			resolution = deltaE.GetFunction("gaus").GetParameter(2)/E[i]
-			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2)
+			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2 + (mean_err/E[i])**2 + fit_err_scale**2)
 
 			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy [MeV] = %f\n" % E[i])
@@ -182,8 +175,6 @@ class Energy_Fitter():
 				stats.write("resolution [\u03C3/E] = %f\n" % resolution)
 				stats.write("resolution error = +/- %f\n" % resolution_err)
 			del c1
-			#del c_upper
-			#del c_lower
 
 
 	@staticmethod
@@ -285,10 +276,24 @@ class Energy_Fitter():
 		else:
 			print("\nCouldn't propagate p2 error\n")
 
-		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (p0,p0_err_t,p1,p1_err_t,p2,p2_err_t))
+		#print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (p0,p0_err_t,p1,p1_err_t,p2,p2_err_t))
 
 		fit_err = (p0_err_t,p1_err_t,p2_err_t)
-		return (fit,fit_err)
+		#fit_err = (p0_root_err,p1_root_err,p2_root_err)
+
+		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]*p0_root_err/p0_root),fit[1],abs(fit_err[1]*p1_root_err/p1_root),fit[2],abs(fit_err[2]*p2_root_err/p2_root)))
+
+		#fit_err_scale = np.sqrt( ((fit_err[2]*p2_root_err/p2_root)/fit[2])**2 + ((fit_err[1]*p1_root_err/p1_root)/fit[1])**2 )
+		#fit_err_scale = np.sqrt((fit[2]*p2_root_err/p2_root)**2+(fit[1]*p1_root_err/p1_root)**2)
+		#fit_err_scale = np.sqrt((fit_err[2]/fit[2])**2+(fit_err[1]/fit[1])**2)
+
+		fit_err_scale = 2*p2_err_t + p1_err_t #Lyons textbook
+
+		print("\nfit_err_scale\n = ",fit_err_scale)
+
+		del c1
+
+		return (fit,fit_err,fit_err_scale)
 
 		
 
