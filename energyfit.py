@@ -20,12 +20,13 @@ np.set_printoptions(suppress=True)
 class Energy_Fitter():
 
 	def __init__(self, bonsai_fn=None, nwindow = None, interval = None,
-		medium=None, fitter=None, load_lib=True):
+		medium=None, fitter=None, savedir=None, load_lib=True):
 		self.bonsai_fn = bonsai_fn
 		self.nwindow = nwindow
 		self.interval = interval
 		self.medium = medium
 		self.fitter = fitter
+		self.savedir = savedir
 		self.load_lib = load_lib
 
 	def parse_options(self, argv=None):
@@ -45,6 +46,8 @@ class Energy_Fitter():
 		parser.add_argument("--fitter", help="specify which fitter to analyse (N/A): \
 					bonsai, qfit or MC \
 					(default: bonsai)", type=str, default='bonsai')
+		parser.add_argument("--savedir", help="any additional tag to the name of the\
+			directory is saved in (default: [blank])", type=str, default='')
 		args = parser.parse_args(argv)
 		if self.load_lib:
 			root.gSystem.Load('libRATEvent.so')
@@ -55,6 +58,7 @@ class Energy_Fitter():
 		self.interval = args.interval
 		self.medium = args.medium
 		self.fitter = args.fitter
+		self.savedir = args.savedir
 		self.get_file_data()
 
 	def get_file_data(self):
@@ -70,18 +74,27 @@ class Energy_Fitter():
 			elif "wbls" in self.bonsai_fn and "1pc" in self.bonsai_fn and "cons" in self.bonsai_fn:
 				medium = 'WbLS 1% Conservative'
 				medium_save = 'wbls_1pc_cons'
+			elif "wbls" in self.bonsai_fn and "1pc" in self.bonsai_fn and not "baseline" in self.bonsai_fn and not "cons" in self.bonsai_fn:
+				medium = 'WbLS 1%'
+				medium_save = 'wbls_1pc'
 			elif "wbls" in self.bonsai_fn and "3pc" in self.bonsai_fn and "baseline" in self.bonsai_fn:
 				medium = 'WbLS 3% Baseline'
 				medium_save = 'wbls_3pc_baseline'
 			elif "wbls" in self.bonsai_fn and "3pc" in self.bonsai_fn and "cons" in self.bonsai_fn:
 				medium = 'WbLS 3% Conservative'
 				medium_save = 'wbls_3pc_cons'
+			elif "wbls" in self.bonsai_fn and "3pc" in self.bonsai_fn and not "baseline" in self.bonsai_fn and not "cons" in self.bonsai_fn:
+				medium = 'WbLS 3%'
+				medium_save = 'wbls_3pc'
 			elif "wbls" in self.bonsai_fn and "5pc" in self.bonsai_fn and "baseline" in self.bonsai_fn:
 				medium = 'WbLS 5% Baseline'
 				medium_save = 'wbls_5pc_baseline'
 			elif "wbls" in self.bonsai_fn and "5pc" in self.bonsai_fn and "cons" in self.bonsai_fn:
 				medium = 'WbLS 5% Conservative'
 				medium_save = 'wbls_5pc_cons'
+			elif "wbls" in self.bonsai_fn and "5pc" in self.bonsai_fn and not "baseline" in self.bonsai_fn and not "cons" in self.bonsai_fn:
+				medium = 'WbLS 5%'
+				medium_save = 'wbls_5pc'
 
 
 		else:
@@ -176,12 +189,23 @@ class Energy_Fitter():
 			return root.TFile(arg, type)
 
 	def make_directory(self,medium_save):
+
+		if self.savedir == '':
 		
-		if os.path.isdir("../%s_%f" % (medium_save,self.interval)):
-			print("../%s_%f exists" % (medium_save,self.interval))
+			if os.path.isdir("../%s_%f" % (medium_save,self.interval)):
+				print("../%s_%f exists" % (medium_save,self.interval))
+			else:
+				os.mkdir("../%s_%f" % (medium_save,self.interval))
+			save_dir = "../%s_%f" % (medium_save,self.interval)
+
 		else:
-			os.mkdir("../%s_%f" % (medium_save,self.interval))
-		save_dir = "../%s_%f" % (medium_save,self.interval)
+			if os.path.isdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir)):
+				print("../%s_%f_%s exists" % (medium_save,self.interval,self.savedir))
+			else:
+				os.mkdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir))
+			save_dir = "../%s_%f_%s" % (medium_save,self.interval,self.savedir)
+
+
 		return save_dir
 
 	def read_from_tree(self, br_name):
