@@ -37,7 +37,7 @@ class Energy_Fitter():
 			(default: n100)", type=str, default='n100')
 		parser.add_argument("--interval", help="energy interval for \
 			calculating resolution in MeV \
-			(default: 0.5)", type=float, default=0.5)
+			(default: 0.25)", type=float, default=0.25)
 		parser.add_argument("--medium", help="specify the detection medium \
 			(default: none)",
 			type=str, choices=['none','water', 'wbls1pct',
@@ -146,11 +146,11 @@ class Energy_Fitter():
 		with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 			stats.write("Medium = %s\n" % medium)
 			stats.write("p0 = %.5e\n" % fit[0])
-			stats.write("p0 error = +/- %.5e\n" % fit_err[0])
+			stats.write("p0 error = %.5e\n" % fit_err[0])
 			stats.write("p1 = %.5e\n" % fit[1])
-			stats.write("p1 error = +/- %.5e\n" % fit_err[1])
+			stats.write("p1 error = %.5e\n" % fit_err[1])
 			stats.write("p2 = %.5e\n" % fit[2])
-			stats.write("p2 error = +/- %.5e\n" % fit_err[2])
+			stats.write("p2 error = %.5e\n" % fit_err[2])
 
 		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
 			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
