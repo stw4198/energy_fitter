@@ -160,6 +160,7 @@ class Energy_Fitter():
 			deltaE.Fit("gaus","Q")
 			gStyle.SetOptFit(11)
 			deltaE.SetTitle("E_{centre} = %f MeV (%f MeV range) %s" % (E[i],self.interval,medium))
+			n = deltaE.GetEntries()
 			c1.SaveAs("%s/Gaussian_fit_%s_%s.png"% (save_dir,medium_save,E[i]))
 
 			sigma = deltaE.GetFunction("gaus").GetParameter(2)
@@ -167,11 +168,11 @@ class Energy_Fitter():
 			mean = deltaE.GetFunction("gaus").GetParameter(1)
 			mean_err = deltaE.GetFunction("gaus").GetParError(1)
 			resolution = deltaE.GetFunction("gaus").GetParameter(2)/E[i]
-			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2 + (mean_err/E[i])**2 + fit_err_scale**2)
+			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2 + (mean_err/E[i])**2 + fit_err_scale**2 + (1/np.sqrt(n))**2)
 
 			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy [MeV] = %f\n" % E[i])
-				stats.write("Energy range [MeV] = +/- %f\n" % float(0.5*self.interval))
+				stats.write("Energy range [MeV] = +/- %f\n" % float(self.interval/np.sqrt(12)))
 				stats.write("sigma [MeV] = %f\n" % sigma)
 				stats.write("sigma error [MeV] = +/- %f\n" % sigma_err)
 				stats.write("mean [MeV] = %f\n" % mean)
@@ -296,8 +297,6 @@ class Energy_Fitter():
 		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]*p0_root_err/p0_root),fit[1],abs(fit_err[1]*p1_root_err/p1_root),fit[2],abs(fit_err[2]*p2_root_err/p2_root)))
 
 		fit_err_scale = 2*p2_err_t + p1_err_t #Lyons textbook
-
-		print("\nfit_err_scale\n = ",fit_err_scale)
 
 		del c1
 

@@ -97,7 +97,7 @@ resolution_5_5000,resolution_err_5_5000,energy_5_5000,energy_err_5_5000 = value_
 resolution_5_6000,resolution_err_5_6000,energy_5_6000,energy_err_5_6000 = value_extraction_nhits("wbls_5pc",interval,'_6000')
 
 energy = np.arange(interval,10.+interval,interval)
-energy_err = 0.5*interval
+energy_err = interval/np.sqrt(12)
 
 plt.errorbar(energy,resolution_1,yerr=resolution_err_1,xerr=energy_err,linestyle='none',label="WbLS 1% Baseline")
 plt.errorbar(energy,resolution_3,yerr=resolution_err_3,xerr=energy_err,linestyle='none',label="WbLS 3% Baseline")
