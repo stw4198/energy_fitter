@@ -168,7 +168,7 @@ class Energy_Fitter():
 			mean = deltaE.GetFunction("gaus").GetParameter(1)
 			mean_err = deltaE.GetFunction("gaus").GetParError(1)
 			resolution = deltaE.GetFunction("gaus").GetParameter(2)/E[i]
-			resolution_err = resolution * np.sqrt((self.interval/E[i])**2 + (sigma_err/sigma)**2 + (mean_err/E[i])**2 + fit_err_scale**2 + (1/np.sqrt(n))**2)
+			resolution_err = resolution * np.sqrt((self.interval/np.sqrt(12)/E[i])**2 + (sigma_err/sigma)**2 + (mean_err/E[i])**2 + fit_err_scale**2 + (1/np.sqrt(n))**2)
 
 			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy [MeV] = %f\n" % E[i])
