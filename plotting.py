@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import re
 
+CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
+                  '#f781bf', '#a65628', '#984ea3',
+                  '#999999', '#e41a1c', '#dede00']
+
 def value_extraction_nhits(media,interval,tags):
 
 	stats = open("../%s_%f%s/stats_%s.txt" % (media,interval,tags,media), 'r')
@@ -99,9 +103,9 @@ resolution_5_6000,resolution_err_5_6000,energy_5_6000,energy_err_5_6000 = value_
 energy = np.arange(interval,10.+interval,interval)
 energy_err = interval/np.sqrt(12)
 
-plt.errorbar(energy,resolution_1,yerr=resolution_err_1,xerr=energy_err,linestyle='none',label="WbLS 1% Baseline")
-plt.errorbar(energy,resolution_3,yerr=resolution_err_3,xerr=energy_err,linestyle='none',label="WbLS 3% Baseline")
-plt.errorbar(energy,resolution_5,yerr=resolution_err_5,xerr=energy_err,linestyle='none',label="WbLS 5% Baseline")
+plt.errorbar(energy,resolution_1,yerr=resolution_err_1,xerr=energy_err,linestyle='none',color=CB_color_cycle[0],label="WbLS 1% Baseline")
+plt.errorbar(energy,resolution_3,yerr=resolution_err_3,xerr=energy_err,linestyle='none',color=CB_color_cycle[1],label="WbLS 3% Baseline")
+plt.errorbar(energy,resolution_5,yerr=resolution_err_5,xerr=energy_err,linestyle='none',color=CB_color_cycle[2],label="WbLS 5% Baseline")
 plt.xlabel("Kinetic Energy [MeV]")
 plt.ylabel("Resolution [\u03C3/E]")
 plt.title("Electrons in Baseline WATCHMAN Detector")

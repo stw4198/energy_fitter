@@ -271,23 +271,23 @@ class Energy_Fitter():
 		p1_err_3 = new_error_3[1]
 		p2_err_3 = new_error_3[0]
 
-		if abs(p0_2 + p0_err_2 - p0) >= (p0 - p0_3 - p0_err_3):
+		if abs(p0_2 + p0_err_2 - p0) >= abs(p0 - p0_3 - p0_err_3):
 			p0_err_t = abs(p0_2 + p0_err_2 - p0)
-		elif abs(p0_2 + p0_err_2 - p0) <= (p0 - p0_3 - p0_err_3):
+		elif abs(p0_2 + p0_err_2 - p0) <= abs(p0 - p0_3 - p0_err_3):
 			p0_err_t = abs(p0 - p0_3 - p0_err_3)
 		else:
 			print("\nCouldn't propagate p0 error\n")
 
-		if abs(p1_2 + p1_err_2 - p1) >= (p1 - p1_3 - p1_err_3):
+		if abs(p1_2 + p1_err_2 - p1) >= abs(p1 - p1_3 - p1_err_3):
 			p1_err_t = abs(p1_2 + p1_err_2 - p1)
-		elif abs(p1_2 + p1_err_2 - p1) <= (p1 - p1_3 - p1_err_3):
+		elif abs(p1_2 + p1_err_2 - p1) <= abs(p1 - p1_3 - p1_err_3):
 			p1_err_t = abs(p1 - p1_3 - p1_err_3)
 		else:
 			print("\nCouldn't propagate p1 error\n")
 
-		if abs(p2_2 + p2_err_2 - p2) >= (p2 - p2_3 - p2_err_3):
+		if abs(p2_2 + p2_err_2 - p2) >= abs(p2 - p2_3 - p2_err_3):
 			p2_err_t = abs(p2_2 + p2_err_2 - p2)
-		elif abs(p2_2 + p2_err_2 - p2) <= (p2 - p2_3 - p2_err_3):
+		elif abs(p2_2 + p2_err_2 - p2) <= abs(p2 - p2_3 - p2_err_3):
 			p2_err_t = abs(p2 - p2_3 - p2_err_3)
 		else:
 			print("\nCouldn't propagate p2 error\n")
