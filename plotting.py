@@ -1,9 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import re
+from scipy.ndimage.filters import gaussian_filter1d
 
-CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
-                  '#f781bf', '#a65628', '#984ea3',
+Tol_bright = ['#4477AA','#66CCEE','#228833',
+                     '#CCBB44','#EE6677','#AA3377','#BBBBBB','k']
+                     
+CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a', 
+                  '#f781bf', '#a65628', '#984ea3', 
                   '#999999', '#e41a1c', '#dede00']
 
 def value_extraction_nhits(media,interval,tags):
@@ -191,15 +195,49 @@ plt.grid()
 plt.savefig("../electrons_resolution_wbls_5pc_position_%f.pdf" % interval)
 plt.show()
 
-plt.errorbar(energy,resolution_1_0,yerr=resolution_err_1_0,xerr=energy_err,linestyle='dashed',label="WbLS 1%")
-plt.errorbar(energy,resolution_3_0,yerr=resolution_err_3_0,xerr=energy_err,linestyle='dashed',label="WbLS 3%")
-plt.errorbar(energy,resolution_5_0,yerr=resolution_err_5_0,xerr=energy_err,linestyle='dashed',label="WbLS 5%")
-plt.xlim(energy[2]-0.25,energy[-1]+0.25)
+plt.errorbar(energy[2:-2],resolution_1_0[2:-2],yerr=resolution_err_1_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[0],label="WbLS 1%")
+plt.errorbar(energy[2:-2],resolution_3_0[2:-2],yerr=resolution_err_3_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[3],label="WbLS 3%")
+plt.errorbar(energy[2:-2],resolution_5_0[2:-2],yerr=resolution_err_5_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[7],label="WbLS 5%")
+#plt.xlim(energy[2]-0.25,energy[-1]+0.25)
 plt.ylim(0,resolution_5_1000[2]+resolution_err_5_1000[2]+0.05)
 plt.xlabel("Kinetic Energy [MeV]")
 plt.ylabel("Resolution [\u03C3/E]")
-plt.title("Electrons in Baseline WATCHMAN Detector at Centre")
+plt.title("Electrons in NEO (20% PMT Coverage, 6.7 m inner radius)")
 plt.legend()
 plt.grid()
 plt.savefig("../electrons_resolution_centre_%f.pdf" % interval)
+plt.show()
+
+plt.errorbar(energy[2:-2],resolution_1_0[2:-2],yerr=resolution_err_1_0[2:-2],xerr=0,linestyle='dashed',color=Tol_bright[0],label="WbLS 1%")
+plt.errorbar(energy[2:-2],resolution_3_0[2:-2],yerr=resolution_err_3_0[2:-2],xerr=0,linestyle='solid',color=Tol_bright[3],label="WbLS 3%")
+plt.errorbar(energy[2:-2],resolution_5_0[2:-2],yerr=resolution_err_5_0[2:-2],xerr=0,linestyle='dotted',color=Tol_bright[7],label="WbLS 5%")
+#plt.xlim(energy[2]-0.25,energy[-1]+0.25)
+plt.ylim(0,resolution_5_1000[2]+resolution_err_5_1000[2]+0.05)
+plt.xlabel("Kinetic Energy [MeV]")
+plt.ylabel("Resolution [\u03C3/E]")
+plt.title("Electrons in NEO (20% PMT Coverage, 6.7 m inner radius)")
+plt.legend()
+plt.grid()
+plt.savefig("../electrons_resolution_centre_line_%f.pdf" % interval)
+plt.show()
+
+from numpy.polynomial.polynomial import polyfit
+
+fit_1, fit_err_1 = np.polyfit(energy[2:-2],resolution_1_0[2:-2],2,cov=True)
+fit_3, fit_err_3 = np.polyfit(energy[2:-2],resolution_3_0[2:-2],2,cov=True)
+fit_5, fit_err_5 = np.polyfit(energy[2:-2],resolution_5_0[2:-2],2,cov=True)
+
+plt.plot(energy[2:-2], fit_1[2] + fit_1[1]*energy[2:-2] + fit_1[0]*energy[2:-2]*energy[2:-2])
+plt.errorbar(energy[2:-2],resolution_1_0[2:-2],yerr=resolution_err_1_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[0],label="WbLS 1%")
+plt.plot(energy[2:-2], fit_3[2] + fit_3[1]*energy[2:-2] + fit_3[0]*energy[2:-2]*energy[2:-2],color=Tol_bright[3])
+plt.errorbar(energy[2:-2],resolution_3_0[2:-2],yerr=resolution_err_3_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[3],label="WbLS 3%")
+plt.plot(energy[2:-2], fit_5[2] + fit_5[1]*energy[2:-2] + fit_5[0]*energy[2:-2]*energy[2:-2],color=Tol_bright[7])
+plt.errorbar(energy[2:-2],resolution_5_0[2:-2],yerr=resolution_err_5_0[2:-2],xerr=energy_err,linestyle='none',color=Tol_bright[7],label="WbLS 5%")
+plt.ylim(0,resolution_5_1000[2]+resolution_err_5_1000[2]+0.05)
+plt.xlabel("Kinetic Energy [MeV]")
+plt.ylabel("Resolution [\u03C3/E]")
+plt.title("Electrons in NEO (20% PMT Coverage, 6.7 m inner radius)")
+plt.legend()
+plt.grid()
+plt.savefig("../electrons_resolution_centre_best_fit_%f.pdf" % interval)
 plt.show()
