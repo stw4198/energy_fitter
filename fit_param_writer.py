@@ -30,9 +30,6 @@ else:
      	medium = arguments['--medium']
 cwd = os.getcwd()
 
-Tol_bright = ['#4477AA','#66CCEE','#228833',
-                     '#CCBB44','#EE6677','#AA3377','#BBBBBB','k']
-
 def value_extraction(medium,interval,tags):
 
 	stats = open("../%s_%f_%s/stats_%s.txt" % (medium,interval,tags,medium), 'r')
@@ -80,6 +77,7 @@ p2 = []
 p2_err = []
 
 r = [-1,6500,6000,5500,5000,4500,4000,3500,3000,2500,2000,1500,1000,500,0]
+closestPMT = [-1,200,700,1300,1700,2300,2700,3300,3700,4300,4700,5300,5700,6300,6700]
 r_len = len(r)
 
 for i in range(r_len-1):
@@ -93,7 +91,7 @@ for i in range(r_len-1):
 			
 with open('../%s_%s.csv'%(medium,config),'w',newline='') as csvfile:
 	write_csv = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-	write_csv.writerow(['r','p0','p0_err','p1','p1_err','p2','p2_err'])
+	write_csv.writerow(['closestPMT','p0','p0_err','p1','p1_err','p2','p2_err'])
 	write_csv.writerow([-1,0,0,0,0,0,0])
 	for i in range(r_len-1):
-		write_csv.writerow([r[i+1],p0[i],p0_err[i],p1[i],p1_err[i],p2[i],p2_err[i]])
+		write_csv.writerow([closestPMT[i+1],p0[i],p0_err[i],p1[i],p1_err[i],p2[i],p2_err[i]])
