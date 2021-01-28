@@ -95,6 +95,28 @@ for i in range(r_len-1):
 	p2_5.append(p2_file)
 	p2_err_5.append(p2_err_file)
 	
+p2_1_rel = []
+p2_3_rel = []
+p2_5_rel = []
+
+p2_len = len(p2_5)
+
+for i in range(p2_len):
+	p2_1_rel.append(p2_1[i]/p2_1[0])
+	p2_3_rel.append(p2_3[i]/p2_3[0])
+	p2_5_rel.append(p2_5[i]/p2_5[0])
+	
+p2_err_1_rel = []
+p2_err_3_rel = []
+p2_err_5_rel = []
+
+p2_err_len = len(p2_err_5)
+
+for i in range(p2_err_len):
+	p2_err_1_rel.append((p2_1[i]/p2_1[0])*np.sqrt((p2_err_1[i]/p2_1[i])**2 + (p2_err_1[0]/p2_1[0])**2))
+	p2_err_3_rel.append((p2_3[i]/p2_3[0])*np.sqrt((p2_err_3[i]/p2_3[i])**2 + (p2_err_3[0]/p2_3[0])**2))
+	p2_err_5_rel.append((p2_5[i]/p2_5[0])*np.sqrt((p2_err_5[i]/p2_5[i])**2 + (p2_err_5[0]/p2_5[0])**2))
+	
 #plt.plot(r[1:],p0)
 #plt.xlabel('r [mm]')
 #plt.ylabel('p0')
@@ -114,5 +136,16 @@ plt.title("Electrons, 6.7 m PSUP, 20% PC")
 plt.grid()
 plt.legend(loc='upper left')
 plt.savefig("../p2_saturation.png")
+plt.show()
+
+plt.errorbar(r[1:],p2_1_rel,yerr=p2_err_1_rel,color=Tol_bright[0],linestyle='solid',label="WbLS 1%")
+plt.errorbar(r[1:],p2_3_rel,yerr=p2_err_3_rel,color=Tol_bright[3],linestyle='dashed',label="WbLS 3%")
+plt.errorbar(r[1:],p2_5_rel,yerr=p2_err_5_rel,color=Tol_bright[7],linestyle='dotted',label="WbLS 5%")
+plt.xlabel('r [mm]')
+plt.ylabel('p2/p2$_0$')
+plt.title("Electrons, 6.7 m PSUP, 20% PC")
+plt.grid()
+plt.legend(loc='upper left')
+plt.savefig("../p2_saturation_rel.png")
 plt.show()
 			
