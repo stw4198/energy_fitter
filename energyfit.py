@@ -107,7 +107,42 @@ class Energy_Fitter():
 			elif "wbls" in self.bonsai_fn and "5pc" in self.bonsai_fn and not "baseline" in self.bonsai_fn and not "cons" in self.bonsai_fn:
 				medium = 'WbLS 5%'
 				medium_save = 'wbls_5pc'
-
+			elif "8_50_8_10pct" in self.bonsai_fn:
+				medium = '8 m x 50 m x 8 m letterbox (10% PC)'
+				medium_save = '8_50_8_10pct'
+			elif "8_50_8_15pct" in self.bonsai_fn:
+				medium = '8 m x 50 m x 8 m letterbox (15% PC)'
+				medium_save = '8_50_8_15pct'
+			elif "8_50_8_20pct" in self.bonsai_fn:
+				medium = '8 m x 50 m x 8 m letterbox (20% PC)'
+				medium_save = '8_50_8_20pct'
+			elif "8_80_8_10pct" in self.bonsai_fn:
+				medium = '8 m x 80 m x 8 m letterbox (10% PC)'
+				medium_save = '8_80_8_10pct'
+			elif "8_80_8_15pct" in self.bonsai_fn:
+				medium = '8 m x 80 m x 8 m letterbox (15% PC)'
+				medium_save = '8_80_8_15pct'
+			elif "8_80_8_20pct" in self.bonsai_fn:
+				medium = '8 m x 80 m x 8 m letterbox (20% PC)'
+				medium_save = '8_80_8_20pct'
+			elif "10_10_10pct" in self.bonsai_fn:
+				medium = '10 m x 10 m cylinder (10% PC)'
+				medium_save = '10_10_10pct'
+			elif "10_10_15pct" in self.bonsai_fn:
+				medium = '10 m x 10 m cylinder (15% PC)'
+				medium_save = '10_10_15pct'
+			elif "10_10_20pct" in self.bonsai_fn:
+				medium = '10 m x 10 m cylinder (20% PC)'
+				medium_save = '10_10_20pct'
+			elif "12_12_10pct" in self.bonsai_fn:
+				medium = '12 m x  12 m cylinder (10% PC)'
+				medium_save = '12_12_10pct'
+			elif "12_12_15pct" in self.bonsai_fn:
+				medium = '12 m x  12 m cylinder (15% PC)'
+				medium_save = '12_12_15pct'
+			elif "12_12_20pct" in self.bonsai_fn:
+				medium = '12 m x  12 m cylinder (20% PC)'
+				medium_save = '12_12_20pct'
 
 		else:
 			medium,medium_save = self.medium
@@ -232,6 +267,7 @@ class Energy_Fitter():
 	def resolution_testing(self):
 		medium,medium_save = self.medium_detect()
 		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
+		#conditions = "(x*x+z*z)<3000*3000 && %s > 0" % self.nwindow
 		fit,fit_err = self.make_fit(conditions)
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		save_dir = self.make_directory(medium_save)

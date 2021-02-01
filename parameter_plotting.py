@@ -142,7 +142,7 @@ plt.errorbar(r[1:],p2_1_rel,yerr=p2_err_1_rel,color=Tol_bright[0],linestyle='sol
 plt.errorbar(r[1:],p2_3_rel,yerr=p2_err_3_rel,color=Tol_bright[3],linestyle='dashed',label="WbLS 3%")
 plt.errorbar(r[1:],p2_5_rel,yerr=p2_err_5_rel,color=Tol_bright[7],linestyle='dotted',label="WbLS 5%")
 plt.xlabel('r [mm]')
-plt.ylabel('p2/p2$_0$')
+plt.ylabel('p2/p2$_{r=0}$')
 plt.title("Electrons, 6.7 m PSUP, 20% PC")
 plt.grid()
 plt.legend(loc='upper left')

@@ -10,7 +10,7 @@ CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3', 
                   '#999999', '#e41a1c', '#dede00']
 
-def value_extraction_nhits(media,interval,tags):
+def value_extraction(media,interval,tags):
 
 	stats = open("../%s_%f%s/stats_%s.txt" % (media,interval,tags,media), 'r')
 	stats_lines = stats.readlines()
@@ -74,45 +74,45 @@ def value_extraction_nhits(media,interval,tags):
 
 interval = 0.25
 medium_type = ''
-pos = 'centre'
+pos = 'cylinder'
 
 if pos == 'off':
 
-	resolution_1,resolution_err_1,energy_1,energy_err_1 = value_extraction_nhits("wbls_1pc_baseline",interval,'')
-	resolution_3,resolution_err_3,energy_3,energy_err_3 = value_extraction_nhits("wbls_3pc_baseline",interval,'')
-	resolution_5,resolution_err_5,energy_5,energy_err_5 = value_extraction_nhits("wbls_5pc_baseline",interval,'')
+	resolution_1,resolution_err_1,energy_1,energy_err_1 = value_extraction("wbls_1pc_baseline",interval,'')
+	resolution_3,resolution_err_3,energy_3,energy_err_3 = value_extraction("wbls_3pc_baseline",interval,'')
+	resolution_5,resolution_err_5,energy_5,energy_err_5 = value_extraction("wbls_5pc_baseline",interval,'')
 
 elif pos == 'on':
 
-	resolution_1_0,resolution_err_1_0,energy_1_0,energy_err_1_0 = value_extraction_nhits("wbls_1pc",interval,'_centre')
-	resolution_1_1000,resolution_err_1_1000,energy_1_1000,energy_err_1_1000 = value_extraction_nhits("wbls_1pc",interval,'_1000')
-	resolution_1_2000,resolution_err_1_2000,energy_1_2000,energy_err_1_2000 = value_extraction_nhits("wbls_1pc",interval,'_2000')
-	resolution_1_3000,resolution_err_1_3000,energy_1_3000,energy_err_1_3000 = value_extraction_nhits("wbls_1pc",interval,'_3000')
-	resolution_1_4000,resolution_err_1_4000,energy_1_4000,energy_err_1_4000 = value_extraction_nhits("wbls_1pc",interval,'_4000')
-	resolution_1_5000,resolution_err_1_5000,energy_1_5000,energy_err_1_5000 = value_extraction_nhits("wbls_1pc",interval,'_5000')
-	resolution_1_6000,resolution_err_1_6000,energy_1_6000,energy_err_1_6000 = value_extraction_nhits("wbls_1pc",interval,'_6000')
+	resolution_1_0,resolution_err_1_0,energy_1_0,energy_err_1_0 = value_extraction("wbls_1pc",interval,'_centre')
+	resolution_1_1000,resolution_err_1_1000,energy_1_1000,energy_err_1_1000 = value_extraction("wbls_1pc",interval,'_1000')
+	resolution_1_2000,resolution_err_1_2000,energy_1_2000,energy_err_1_2000 = value_extraction("wbls_1pc",interval,'_2000')
+	resolution_1_3000,resolution_err_1_3000,energy_1_3000,energy_err_1_3000 = value_extraction("wbls_1pc",interval,'_3000')
+	resolution_1_4000,resolution_err_1_4000,energy_1_4000,energy_err_1_4000 = value_extraction("wbls_1pc",interval,'_4000')
+	resolution_1_5000,resolution_err_1_5000,energy_1_5000,energy_err_1_5000 = value_extraction("wbls_1pc",interval,'_5000')
+	resolution_1_6000,resolution_err_1_6000,energy_1_6000,energy_err_1_6000 = value_extraction("wbls_1pc",interval,'_6000')
 
-	resolution_3_0,resolution_err_3_0,energy_3_0,energy_err_3_0 = value_extraction_nhits("wbls_3pc",interval,'_centre')
-	resolution_3_1000,resolution_err_3_1000,energy_3_1000,energy_err_3_1000 = value_extraction_nhits("wbls_3pc",interval,'_1000')
-	resolution_3_2000,resolution_err_3_2000,energy_3_2000,energy_err_3_2000 = value_extraction_nhits("wbls_3pc",interval,'_2000')
-	resolution_3_3000,resolution_err_3_3000,energy_3_3000,energy_err_3_3000 = value_extraction_nhits("wbls_3pc",interval,'_3000')
-	resolution_3_4000,resolution_err_3_4000,energy_3_4000,energy_err_3_4000 = value_extraction_nhits("wbls_3pc",interval,'_4000')
-	resolution_3_5000,resolution_err_3_5000,energy_3_5000,energy_err_3_5000 = value_extraction_nhits("wbls_3pc",interval,'_5000')
-	resolution_3_6000,resolution_err_3_6000,energy_3_6000,energy_err_3_6000 = value_extraction_nhits("wbls_3pc",interval,'_6000')
+	resolution_3_0,resolution_err_3_0,energy_3_0,energy_err_3_0 = value_extraction("wbls_3pc",interval,'_centre')
+	resolution_3_1000,resolution_err_3_1000,energy_3_1000,energy_err_3_1000 = value_extraction("wbls_3pc",interval,'_1000')
+	resolution_3_2000,resolution_err_3_2000,energy_3_2000,energy_err_3_2000 = value_extraction("wbls_3pc",interval,'_2000')
+	resolution_3_3000,resolution_err_3_3000,energy_3_3000,energy_err_3_3000 = value_extraction("wbls_3pc",interval,'_3000')
+	resolution_3_4000,resolution_err_3_4000,energy_3_4000,energy_err_3_4000 = value_extraction("wbls_3pc",interval,'_4000')
+	resolution_3_5000,resolution_err_3_5000,energy_3_5000,energy_err_3_5000 = value_extraction("wbls_3pc",interval,'_5000')
+	resolution_3_6000,resolution_err_3_6000,energy_3_6000,energy_err_3_6000 = value_extraction("wbls_3pc",interval,'_6000')
 
-	resolution_5_0,resolution_err_5_0,energy_5_0,energy_err_5_0 = value_extraction_nhits("wbls_5pc",interval,'_centre')
-	resolution_5_1000,resolution_err_5_1000,energy_5_1000,energy_err_5_1000 = value_extraction_nhits("wbls_5pc",interval,'_1000')
-	resolution_5_2000,resolution_err_5_2000,energy_5_2000,energy_err_5_2000 = value_extraction_nhits("wbls_5pc",interval,'_2000')
-	resolution_5_3000,resolution_err_5_3000,energy_5_3000,energy_err_5_3000 = value_extraction_nhits("wbls_5pc",interval,'_3000')
-	resolution_5_4000,resolution_err_5_4000,energy_5_4000,energy_err_5_4000 = value_extraction_nhits("wbls_5pc",interval,'_4000')
-	resolution_5_5000,resolution_err_5_5000,energy_5_5000,energy_err_5_5000 = value_extraction_nhits("wbls_5pc",interval,'_5000')
-	resolution_5_6000,resolution_err_5_6000,energy_5_6000,energy_err_5_6000 = value_extraction_nhits("wbls_5pc",interval,'_6000')
+	resolution_5_0,resolution_err_5_0,energy_5_0,energy_err_5_0 = value_extraction("wbls_5pc",interval,'_centre')
+	resolution_5_1000,resolution_err_5_1000,energy_5_1000,energy_err_5_1000 = value_extraction("wbls_5pc",interval,'_1000')
+	resolution_5_2000,resolution_err_5_2000,energy_5_2000,energy_err_5_2000 = value_extraction("wbls_5pc",interval,'_2000')
+	resolution_5_3000,resolution_err_5_3000,energy_5_3000,energy_err_5_3000 = value_extraction("wbls_5pc",interval,'_3000')
+	resolution_5_4000,resolution_err_5_4000,energy_5_4000,energy_err_5_4000 = value_extraction("wbls_5pc",interval,'_4000')
+	resolution_5_5000,resolution_err_5_5000,energy_5_5000,energy_err_5_5000 = value_extraction("wbls_5pc",interval,'_5000')
+	resolution_5_6000,resolution_err_5_6000,energy_5_6000,energy_err_5_6000 = value_extraction("wbls_5pc",interval,'_6000')
 	
 elif pos == 'centre':
 
-	resolution_1_0,resolution_err_1_0,energy_1_0,energy_err_1_0 = value_extraction_nhits("wbls_1pc",interval,'_centre')
-	resolution_3_0,resolution_err_3_0,energy_3_0,energy_err_3_0 = value_extraction_nhits("wbls_3pc",interval,'_centre')
-	resolution_5_0,resolution_err_5_0,energy_5_0,energy_err_5_0 = value_extraction_nhits("wbls_5pc",interval,'_centre')
+	resolution_1_0,resolution_err_1_0,energy_1_0,energy_err_1_0 = value_extraction("wbls_1pc",interval,'_centre')
+	resolution_3_0,resolution_err_3_0,energy_3_0,energy_err_3_0 = value_extraction("wbls_3pc",interval,'_centre')
+	resolution_5_0,resolution_err_5_0,energy_5_0,energy_err_5_0 = value_extraction("wbls_5pc",interval,'_centre')
 	
 else:
 
@@ -137,7 +137,7 @@ if pos == 'off':
 	plt.errorbar(energy,resolution_1,yerr=resolution_err_1,xerr=energy_err,linestyle='none',color=Tol_bright[0],label="WbLS 1% Baseline")
 	plt.errorbar(energy,resolution_3,yerr=resolution_err_3,xerr=energy_err,linestyle='none',color=Tol_bright[3],label="WbLS 3% Baseline")
 	plt.errorbar(energy,resolution_5,yerr=resolution_err_5,xerr=energy_err,linestyle='none',color=Tol_bright[7],label="WbLS 5% Baseline")
-	plt.xlim(energy[2]-0.25,energy[-1]+0.25)
+	plt.xlim(energy[2]-0.125,energy[-1]+0.125)
 	plt.ylim(0,resolution_1[2]+resolution_err_1[2]+0.05)
 	plt.xlabel("Kinetic Energy [MeV]")
 	plt.ylabel("Resolution [\u03C3/E]")
@@ -251,4 +251,141 @@ elif pos == 'centre':
 	plt.legend()
 	plt.grid()
 	plt.savefig("../electrons_resolution_centre_best_fit_%f.pdf" % interval)
+	plt.show()
+	
+elif pos == 'letterbox':
+
+	interval = 0.5
+
+	res_8_50_8_10pct,res_err_8_50_8_10pct,en_8_50_8_10pct,en_err_8_50_8_10pct = value_extraction("8_50_8_10pct",0.5,'')
+	res_8_50_8_15pct,res_err_8_50_8_15pct,en_8_50_8_15pct,en_err_8_50_8_15pct = value_extraction("8_50_8_15pct",0.5,'')
+	res_8_50_8_20pct,res_err_8_50_8_20pct,en_8_50_8_20pct,en_err_8_50_8_20pct = value_extraction("8_50_8_20pct",0.5,'')
+	res_8_80_8_10pct,res_err_8_80_8_10pct,en_8_80_8_10pct,en_err_8_80_8_10pct = value_extraction("8_80_8_10pct",0.5,'')
+	res_8_80_8_15pct,res_err_8_80_8_15pct,en_8_80_8_15pct,en_err_8_80_8_15pct = value_extraction("8_80_8_15pct",0.5,'')
+	res_8_80_8_20pct,res_err_8_80_8_20pct,en_8_80_8_20pct,en_err_8_80_8_20pct = value_extraction("8_80_8_20pct",0.5,'')
+	
+	energy = np.arange(interval,10.+interval,interval)
+	energy_err = interval/np.sqrt(12)
+	
+	plt.errorbar(energy,res_8_50_8_10pct,yerr=res_err_8_50_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy,res_8_50_8_15pct,yerr=res_err_8_50_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy,res_8_50_8_20pct,yerr=res_err_8_50_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("8 m x 50 m x 8 m Letterbox")
+	plt.grid()
+	plt.savefig("../8_50_8_letterbox.png")
+	plt.show()
+	
+	plt.errorbar(energy,res_8_80_8_10pct,yerr=res_err_8_80_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy,res_8_80_8_15pct,yerr=res_err_8_80_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy,res_8_80_8_20pct,yerr=res_err_8_80_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("8 m x 80 m x 8 m Letterbox")
+	plt.grid()
+	plt.savefig("../8_80_8_letterbox.png")
+	plt.show()
+	
+	plt.errorbar(energy,res_8_50_8_10pct,yerr=res_err_8_50_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy,res_8_80_8_10pct,yerr=res_err_8_80_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC Letterbox")
+	plt.grid()
+	plt.savefig("../10pct_letterbox.png")
+	plt.show()
+	
+	plt.errorbar(energy,res_8_50_8_15pct,yerr=res_err_8_50_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy,res_8_80_8_15pct,yerr=res_err_8_80_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC Letterbox")
+	plt.grid()
+	plt.savefig("../15pct_letterbox.png")
+	plt.show()
+	
+	plt.errorbar(energy,res_8_50_8_20pct,yerr=res_err_8_50_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy,res_8_80_8_20pct,yerr=res_err_8_80_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC Letterbox")
+	plt.grid()
+	plt.savefig("../20pct_letterbox.png")
+	plt.show()
+
+elif pos == 'cylinder':
+
+	interval = 0.25
+
+	energy = np.arange(interval,10.+interval,interval)
+	energy_err = interval/np.sqrt(12)
+
+	res_10_10_10pct, res_err_10_10_10pct, en_10_10_10pct, en_err_10_10_10pct = value_extraction("10_10_10pct",0.25,'')
+	res_10_10_15pct, res_err_10_10_15pct, en_10_10_15pct, en_err_10_10_15pct = value_extraction("10_10_15pct",0.25,'')
+	res_10_10_20pct, res_err_10_10_20pct, en_10_10_20pct, en_err_10_10_20pct = value_extraction("10_10_20pct",0.25,'')
+	res_12_12_10pct, res_err_12_12_10pct, en_12_12_10pct, en_err_20_20_10pct = value_extraction("12_12_10pct",0.25,'')
+	res_12_12_15pct, res_err_12_12_15pct, en_12_12_15pct, en_err_20_20_15pct = value_extraction("12_12_15pct",0.25,'')
+	res_12_12_20pct, res_err_12_12_20pct, en_12_12_20pct, en_err_20_20_20pct = value_extraction("12_12_20pct",0.25,'')
+	
+	plt.errorbar(energy[1:-1],res_10_10_10pct[1:-1],yerr=res_err_10_10_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy[1:-1],res_10_10_15pct[1:-1],yerr=res_err_10_10_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy[1:-1],res_10_10_20pct[1:-1],yerr=res_err_10_10_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10 m x 10 m Cylinder")
+	plt.grid()
+	plt.ylim(0,2*res_10_10_10pct[1])
+	plt.savefig("../10_10_cylinder.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_12_12_10pct[1:-1],yerr=res_err_12_12_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy[1:-1],res_12_12_15pct[1:-1],yerr=res_err_12_12_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy[1:-1],res_12_12_20pct[1:-1],yerr=res_err_12_12_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("12 m x 12 m Cylinder")
+	plt.grid()
+	plt.ylim(0,2*res_12_12_10pct[1])
+	plt.savefig("../12_12_cylinder.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_10_10_10pct[1:-1],yerr=res_err_10_10_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10 x 10 m')
+	plt.errorbar(energy[1:-1],res_12_12_10pct[1:-1],yerr=res_err_12_12_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='12 x 12 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC Cylinder")
+	plt.grid()
+	plt.ylim(0,2*res_10_10_10pct[1])
+	plt.savefig("../10pct_cylinder.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_10_10_15pct[1:-1],yerr=res_err_10_10_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10 x 10 m')
+	plt.errorbar(energy[1:-1],res_12_12_15pct[1:-1],yerr=res_err_12_12_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='12 x 12 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC Cylinder")
+	plt.grid()
+	plt.ylim(0,2*res_10_10_15pct[1])
+	plt.savefig("../15pct_cylinder.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_10_10_20pct[1:-1],yerr=res_err_10_10_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10 x 10 m')
+	plt.errorbar(energy[1:-1],res_12_12_20pct[1:-1],yerr=res_err_12_12_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='12 x 12 m')
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC Cylinder")
+	plt.grid()
+	plt.ylim(0,2*res_10_10_20pct[1])
+	plt.savefig("../20pct_cylinder.png")
 	plt.show()
