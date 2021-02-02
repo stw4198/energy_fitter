@@ -155,8 +155,7 @@ int main(int argc, char** argv)
   for (event = 0; event < n_events; event++)
     {
       if (event%1000==0)
-        printf("Evaluating event %d of %d (%d sub events)\n",event,n_events,
-	      ds->GetEVCount());
+        printf("Evaluating event %d of %d\n",event,n_events);
       rat_tree->GetEntry(event);
 
 
