@@ -96,10 +96,10 @@ int main(int argc, char** argv)
   // open output files
   ofstream mc_csvfile;
   mc_csvfile.open (argv[2],ofstream::trunc);
-  mc_csvfile << "# trueX,  trueY,  trueZ,  trueU,  trueV,  trueW,  trueT \n";
+  mc_csvfile << "# event, trueX,  trueY,  trueZ,  trueU,  trueV,  trueW,  trueT \n";
   ofstream hit_csvfile;
   hit_csvfile.open (argv[3],ofstream::trunc);
-  hit_csvfile << "event, hit, x, y, z, q, id, t \n";
+  hit_csvfile << "# event, hit, x, y, z, q, id, t \n";
 
   run_tree->GetEntry(0);
 
@@ -229,7 +229,7 @@ int main(int argc, char** argv)
         trueU = temp.X();trueV = temp.Y();trueW = temp.Z();
 
 	// write the mc data to the other csvfile
-	mc_csvfile << trueX << "," << trueY << "," << trueZ << "," << trueU << "," << trueV << "," << trueW << "," << trueT << "\n";
+	mc_csvfile << event << "," << trueX << "," << trueY << "," << trueZ << "," << trueU << "," << trueV << "," << trueW << "," << trueT << "\n";
       } 
     }
   cout << triggers << " triggered events" << endl;
