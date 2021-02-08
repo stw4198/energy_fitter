@@ -74,7 +74,7 @@ def value_extraction(media,interval,tags):
 
 interval = 0.25
 medium_type = ''
-pos = 'cylinder'
+pos = 'letterbox'
 
 if pos == 'off':
 
@@ -257,19 +257,19 @@ elif pos == 'letterbox':
 
 	interval = 0.5
 
-	res_8_50_8_10pct,res_err_8_50_8_10pct,en_8_50_8_10pct,en_err_8_50_8_10pct = value_extraction("8_50_8_10pct",0.5,'')
-	res_8_50_8_15pct,res_err_8_50_8_15pct,en_8_50_8_15pct,en_err_8_50_8_15pct = value_extraction("8_50_8_15pct",0.5,'')
-	res_8_50_8_20pct,res_err_8_50_8_20pct,en_8_50_8_20pct,en_err_8_50_8_20pct = value_extraction("8_50_8_20pct",0.5,'')
-	res_8_80_8_10pct,res_err_8_80_8_10pct,en_8_80_8_10pct,en_err_8_80_8_10pct = value_extraction("8_80_8_10pct",0.5,'')
-	res_8_80_8_15pct,res_err_8_80_8_15pct,en_8_80_8_15pct,en_err_8_80_8_15pct = value_extraction("8_80_8_15pct",0.5,'')
-	res_8_80_8_20pct,res_err_8_80_8_20pct,en_8_80_8_20pct,en_err_8_80_8_20pct = value_extraction("8_80_8_20pct",0.5,'')
+	res_8_50_8_10pct,res_err_8_50_8_10pct,en_8_50_8_10pct,en_err_8_50_8_10pct = value_extraction("8_50_8_10pct",interval,'')
+	res_8_50_8_15pct,res_err_8_50_8_15pct,en_8_50_8_15pct,en_err_8_50_8_15pct = value_extraction("8_50_8_15pct",interval,'')
+	res_8_50_8_20pct,res_err_8_50_8_20pct,en_8_50_8_20pct,en_err_8_50_8_20pct = value_extraction("8_50_8_20pct",interval,'')
+	res_8_80_8_10pct,res_err_8_80_8_10pct,en_8_80_8_10pct,en_err_8_80_8_10pct = value_extraction("8_80_8_10pct",interval,'')
+	res_8_80_8_15pct,res_err_8_80_8_15pct,en_8_80_8_15pct,en_err_8_80_8_15pct = value_extraction("8_80_8_15pct",interval,'')
+	res_8_80_8_20pct,res_err_8_80_8_20pct,en_8_80_8_20pct,en_err_8_80_8_20pct = value_extraction("8_80_8_20pct",interval,'')
 	
 	energy = np.arange(interval,10.+interval,interval)
 	energy_err = interval/np.sqrt(12)
 	
-	plt.errorbar(energy,res_8_50_8_10pct,yerr=res_err_8_50_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
-	plt.errorbar(energy,res_8_50_8_15pct,yerr=res_err_8_50_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
-	plt.errorbar(energy,res_8_50_8_20pct,yerr=res_err_8_50_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.errorbar(energy[1:-1],res_8_50_8_10pct[1:-1],yerr=res_err_8_50_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy[1:-1],res_8_50_8_15pct[1:-1],yerr=res_err_8_50_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy[1:-1],res_8_50_8_20pct[1:-1],yerr=res_err_8_50_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
 	plt.xlabel('Kinetic energy [MeV]')
 	plt.ylabel("Resolution [\u03C3/E]")
 	plt.legend()
@@ -278,9 +278,9 @@ elif pos == 'letterbox':
 	plt.savefig("../8_50_8_letterbox.png")
 	plt.show()
 	
-	plt.errorbar(energy,res_8_80_8_10pct,yerr=res_err_8_80_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
-	plt.errorbar(energy,res_8_80_8_15pct,yerr=res_err_8_80_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
-	plt.errorbar(energy,res_8_80_8_20pct,yerr=res_err_8_80_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
+	plt.errorbar(energy[1:-1],res_8_80_8_10pct[1:-1],yerr=res_err_8_80_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
+	plt.errorbar(energy[1:-1],res_8_80_8_15pct[1:-1],yerr=res_err_8_80_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
+	plt.errorbar(energy[1:-1],res_8_80_8_20pct[1:-1],yerr=res_err_8_80_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='20% PC')
 	plt.xlabel('Kinetic energy [MeV]')
 	plt.ylabel("Resolution [\u03C3/E]")
 	plt.legend()
@@ -289,8 +289,8 @@ elif pos == 'letterbox':
 	plt.savefig("../8_80_8_letterbox.png")
 	plt.show()
 	
-	plt.errorbar(energy,res_8_50_8_10pct,yerr=res_err_8_50_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
-	plt.errorbar(energy,res_8_80_8_10pct,yerr=res_err_8_80_8_10pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_50_8_10pct[1:-1],yerr=res_err_8_50_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_80_8_10pct[1:-1],yerr=res_err_8_80_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
 	plt.xlabel('Kinetic energy [MeV]')
 	plt.ylabel("Resolution [\u03C3/E]")
 	plt.legend()
@@ -299,8 +299,8 @@ elif pos == 'letterbox':
 	plt.savefig("../10pct_letterbox.png")
 	plt.show()
 	
-	plt.errorbar(energy,res_8_50_8_15pct,yerr=res_err_8_50_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
-	plt.errorbar(energy,res_8_80_8_15pct,yerr=res_err_8_80_8_15pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_50_8_15pct[1:-1],yerr=res_err_8_50_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_80_8_15pct[1:-1],yerr=res_err_8_80_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
 	plt.xlabel('Kinetic energy [MeV]')
 	plt.ylabel("Resolution [\u03C3/E]")
 	plt.legend()
@@ -309,8 +309,8 @@ elif pos == 'letterbox':
 	plt.savefig("../15pct_letterbox.png")
 	plt.show()
 	
-	plt.errorbar(energy,res_8_50_8_20pct,yerr=res_err_8_50_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
-	plt.errorbar(energy,res_8_80_8_20pct,yerr=res_err_8_80_8_20pct,xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_50_8_20pct[1:-1],yerr=res_err_8_50_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='8 x 50 x 8 m')
+	plt.errorbar(energy[1:-1],res_8_80_8_20pct[1:-1],yerr=res_err_8_80_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='8 x 80 x 8 m')
 	plt.xlabel('Kinetic energy [MeV]')
 	plt.ylabel("Resolution [\u03C3/E]")
 	plt.legend()
@@ -326,12 +326,12 @@ elif pos == 'cylinder':
 	energy = np.arange(interval,10.+interval,interval)
 	energy_err = interval/np.sqrt(12)
 
-	res_10_10_10pct, res_err_10_10_10pct, en_10_10_10pct, en_err_10_10_10pct = value_extraction("10_10_10pct",0.25,'')
-	res_10_10_15pct, res_err_10_10_15pct, en_10_10_15pct, en_err_10_10_15pct = value_extraction("10_10_15pct",0.25,'')
-	res_10_10_20pct, res_err_10_10_20pct, en_10_10_20pct, en_err_10_10_20pct = value_extraction("10_10_20pct",0.25,'')
-	res_12_12_10pct, res_err_12_12_10pct, en_12_12_10pct, en_err_20_20_10pct = value_extraction("12_12_10pct",0.25,'')
-	res_12_12_15pct, res_err_12_12_15pct, en_12_12_15pct, en_err_20_20_15pct = value_extraction("12_12_15pct",0.25,'')
-	res_12_12_20pct, res_err_12_12_20pct, en_12_12_20pct, en_err_20_20_20pct = value_extraction("12_12_20pct",0.25,'')
+	res_10_10_10pct, res_err_10_10_10pct, en_10_10_10pct, en_err_10_10_10pct = value_extraction("10_10_10pct",interval,'')
+	res_10_10_15pct, res_err_10_10_15pct, en_10_10_15pct, en_err_10_10_15pct = value_extraction("10_10_15pct",interval,'')
+	res_10_10_20pct, res_err_10_10_20pct, en_10_10_20pct, en_err_10_10_20pct = value_extraction("10_10_20pct",interval,'')
+	res_12_12_10pct, res_err_12_12_10pct, en_12_12_10pct, en_err_20_20_10pct = value_extraction("12_12_10pct",interval,'')
+	res_12_12_15pct, res_err_12_12_15pct, en_12_12_15pct, en_err_20_20_15pct = value_extraction("12_12_15pct",interval,'')
+	res_12_12_20pct, res_err_12_12_20pct, en_12_12_20pct, en_err_20_20_20pct = value_extraction("12_12_20pct",interval,'')
 	
 	plt.errorbar(energy[1:-1],res_10_10_10pct[1:-1],yerr=res_err_10_10_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[0],label='10% PC')
 	plt.errorbar(energy[1:-1],res_10_10_15pct[1:-1],yerr=res_err_10_10_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='15% PC')
@@ -341,7 +341,7 @@ elif pos == 'cylinder':
 	plt.legend()
 	plt.title("10 m x 10 m Cylinder")
 	plt.grid()
-	plt.ylim(0,2*res_10_10_10pct[1])
+	#plt.ylim(0,2*res_10_10_10pct[1])
 	plt.savefig("../10_10_cylinder.png")
 	plt.show()
 	
@@ -353,7 +353,7 @@ elif pos == 'cylinder':
 	plt.legend()
 	plt.title("12 m x 12 m Cylinder")
 	plt.grid()
-	plt.ylim(0,2*res_12_12_10pct[1])
+	#plt.ylim(0,2*res_12_12_10pct[1])
 	plt.savefig("../12_12_cylinder.png")
 	plt.show()
 	
@@ -364,7 +364,7 @@ elif pos == 'cylinder':
 	plt.legend()
 	plt.title("10% PC Cylinder")
 	plt.grid()
-	plt.ylim(0,2*res_10_10_10pct[1])
+	#plt.ylim(0,2*res_10_10_10pct[1])
 	plt.savefig("../10pct_cylinder.png")
 	plt.show()
 	
@@ -375,7 +375,7 @@ elif pos == 'cylinder':
 	plt.legend()
 	plt.title("15% PC Cylinder")
 	plt.grid()
-	plt.ylim(0,2*res_10_10_15pct[1])
+	#plt.ylim(0,2*res_10_10_15pct[1])
 	plt.savefig("../15pct_cylinder.png")
 	plt.show()
 	
@@ -386,6 +386,6 @@ elif pos == 'cylinder':
 	plt.legend()
 	plt.title("20% PC Cylinder")
 	plt.grid()
-	plt.ylim(0,2*res_10_10_20pct[1])
+	#plt.ylim(0,2*res_10_10_20pct[1])
 	plt.savefig("../20pct_cylinder.png")
 	plt.show()
