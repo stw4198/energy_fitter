@@ -20,7 +20,7 @@ np.set_printoptions(suppress=True)
 class Energy_Fitter():
 
 	def __init__(self, bonsai_fn=None, nwindow = None, interval = None,
-		medium=None, fitter=None, savedir=None, load_lib=True, resolution=None):
+		medium=None, fitter=None, savedir=None, load_lib=True, resolution=None, charge=None):
 		self.bonsai_fn = bonsai_fn
 		self.nwindow = nwindow
 		self.interval = interval
@@ -29,6 +29,7 @@ class Energy_Fitter():
 		self.savedir = savedir
 		self.load_lib = load_lib
 		self.resolution = resolution
+		self.charge = charge
 
 	def parse_options(self, argv=None):
 		parser = argparse.ArgumentParser()
@@ -51,6 +52,8 @@ class Energy_Fitter():
 			directory is saved in (default: [blank])", type=str, default='')
 		parser.add_argument("--resolution", help="specify resolution testing\
 			1 = on, 0 = off (default: 0)", type=int, default=0)
+		parser.add_argument("--charge", help="use PMT charge, not nhits, for energy.\
+			 1 = on, 0 = off (default: 0)", type=int, default=0)
 		args = parser.parse_args(argv)
 		if self.load_lib:
 			root.gSystem.Load('libRATEvent.so')
@@ -63,6 +66,7 @@ class Energy_Fitter():
 		self.fitter = args.fitter
 		self.savedir = args.savedir
 		self.resolution = args.resolution
+		self.charge = args.charge
 		self.get_file_data()
 		return self.resolution
 
@@ -151,21 +155,35 @@ class Energy_Fitter():
 		
 	
 	def make_directory(self,medium_save):
-
+				
 		if self.savedir == '':
 		
-			if os.path.isdir("../%s_%f" % (medium_save,self.interval)):
-				print("../%s_%f exists" % (medium_save,self.interval))
+			if self.charge == 1:
+				if os.path.isdir("../%s_charge" % medium_save):
+					print("../%s_charge exists" % medium_save)
+				else:
+					os.mkdir("../%s_charge" % medium_save)
+				save_dir = ("../%s_charge" % medium_save)
 			else:
-				os.mkdir("../%s_%f" % (medium_save,self.interval))
-			save_dir = "../%s_%f" % (medium_save,self.interval)
-
+				if os.path.isdir("../%s" % medium_save):
+					print("../%s exists" % medium_save)
+				else:
+					os.mkdir("../%s" % medium_save)
+				save_dir = ("../%s" % medium_save)
 		else:
-			if os.path.isdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir)):
-				print("../%s_%f_%s exists" % (medium_save,self.interval,self.savedir))
+			
+			if self.charge == 1:
+				if os.path.isdir("../%s_charge_%f" % (medium_save,self.savedir)):
+					print("../%s_charge_%f exists" % (medium_save,self.savedir))
+				else:
+					os.mkdir("../%s_charge_%f" % (medium_save,self.savedir))
+				save_dir = ("../%s_charge_%f" % (medium_save,self.savedir))
 			else:
-				os.mkdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir))
-			save_dir = "../%s_%f_%s" % (medium_save,self.interval,self.savedir)
+				if os.path.isdir("../%s_%f" % (medium_save,self.savedir)):
+					print("../%s_%f exists" % (medium_save,self.savedir))
+				else:
+					os.mkdir("../%s_%f" % (medium_save,self.savedir))
+				save_dir = ("../%s_%f" % (medium_save,self.savedir))
 
 
 		return save_dir
@@ -188,72 +206,95 @@ class Energy_Fitter():
 		medium,medium_save = self.medium_detect()
 		gROOT.SetBatch(True)
 		c1 = TCanvas( "c1" , "Fit Production", 200, 10, 700 ,500)
-		self.bonsai_t.Draw(self.nwindow+":mc_energy>>hist", conditions)
-		hist = root.gDirectory.Get("hist")
-		hist.Fit("pol2", "Q")
-		hist.GetXaxis().SetTitle("E_{True} [MeV]")
-		hist.GetYaxis().SetTitle(self.nwindow)
-		hist.SetTitle("Production of fit between E_{True} and %s"%self.nwindow)
-		save_dir = self.make_directory(medium_save)
-		c1.SaveAs("%s/fit_production.png"%save_dir)
-		
-		#ROOT fit from E to nwindow
-		p0_root = hist.GetFunction("pol2").GetParameter(0)
-		p1_root = hist.GetFunction("pol2").GetParameter(1)
-		p2_root = hist.GetFunction("pol2").GetParameter(2)
-		p0_root_err = hist.GetFunction("pol2").GetParError(0)
-		p1_root_err = hist.GetFunction("pol2").GetParError(1)
-		p2_root_err = hist.GetFunction("pol2").GetParError(2)
+		if self.charge == 1:
+			self.bonsai_t.Draw("mc_energy:innerPE>>hist",conditions)
+			hist = root.gDirectory.Get("hist")
+			hist.Fit("pol1", "Q")
+			hist.GetYaxis().SetTitle("E_{True} [MeV]")
+			hist.GetXaxis().SetTitle("Photoelectrons")
+			hist.SetTitle("Production of fit between E_{True} and photoelectrons")
+			save_dir = self.make_directory(medium_save)
+			c1.SaveAs("%s/fit_production.png"%save_dir)
+			
+			p0 = hist.GetFunction("pol1").GetParameter(0)
+			p1 = hist.GetFunction("pol1").GetParameter(1)
+			p0_err = hist.GetFunction("pol1").GetParError(0)
+			p1_err = hist.GetFunction("pol1").GetParError(1)
+			fit = (p0, p1)
+			fit_err = (p0_err, p1_err)
+			print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]),fit[1],abs(fit_err[1])))
+			
+		else:
+			self.bonsai_t.Draw(self.nwindow+":mc_energy>>hist", conditions)
+			hist = root.gDirectory.Get("hist")
+			hist.Fit("pol2", "Q")
+			hist.GetXaxis().SetTitle("E_{True} [MeV]")
+			hist.GetYaxis().SetTitle(self.nwindow)
+			hist.SetTitle("Production of fit between E_{True} and %s"%self.nwindow)
+			save_dir = self.make_directory(medium_save)
+			c1.SaveAs("%s/fit_production.png"%save_dir)
+			
+			#ROOT fit from E to nwindow
+			p0_root = hist.GetFunction("pol2").GetParameter(0)
+			p1_root = hist.GetFunction("pol2").GetParameter(1)
+			p2_root = hist.GetFunction("pol2").GetParameter(2)
+			p0_root_err = hist.GetFunction("pol2").GetParError(0)
+			p1_root_err = hist.GetFunction("pol2").GetParError(1)
+			p2_root_err = hist.GetFunction("pol2").GetParError(2)
 
-		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
+			mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 
-		#optimal fit from nwindow to E
-		n100_fit = p2_root*E**2 + p1_root*E + p0_root
-		new_fit, new_error_matrix = np.polyfit(n100_fit,E,2,cov=True) #Find errors here
-		p0 = new_fit[2]
-		p1 = new_fit[1]
-		p2 = new_fit[0]
-		fit = (p0, p1, p2)
-		new_error = np.sqrt(np.diag(new_error_matrix))
-		p0_err = new_error[2]
-		p1_err = new_error[1]
-		p2_err = new_error[0]
+			#optimal fit from nwindow to E
+			n100_fit = p2_root*E**2 + p1_root*E + p0_root
+			new_fit, new_error_matrix = np.polyfit(n100_fit,E,2,cov=True) #Find errors here
+			p0 = new_fit[2]
+			p1 = new_fit[1]
+			p2 = new_fit[0]
+			fit = (p0, p1, p2)
+			new_error = np.sqrt(np.diag(new_error_matrix))
+			p0_err = new_error[2]
+			p1_err = new_error[1]
+			p2_err = new_error[0]
 
-		#upperbound fit from nwindow to E
-		n100_2 = (p2_root - p2_root_err)*E**2 + (p1_root-p1_root_err)*E + (p0_root-p0_root_err)
-		new_fit_2,new_error_matrix_2 = np.polyfit(n100_2,E,2,cov=True)
-		p0_2 = new_fit_2[2]
-		p1_2 = new_fit_2[1]
-		p2_2 = new_fit_2[0]
-		new_error_2 = np.sqrt(np.diag(new_error_matrix_2))
-		p0_err_2 = new_error_2[2]
-		p1_err_2 = new_error_2[1]
-		p2_err_2 = new_error_2[0]
+			#upperbound fit from nwindow to E
+			n100_2 = (p2_root - p2_root_err)*E**2 + (p1_root-p1_root_err)*E + (p0_root-p0_root_err)
+			new_fit_2,new_error_matrix_2 = np.polyfit(n100_2,E,2,cov=True)
+			p0_2 = new_fit_2[2]
+			p1_2 = new_fit_2[1]
+			p2_2 = new_fit_2[0]
+			new_error_2 = np.sqrt(np.diag(new_error_matrix_2))
+			p0_err_2 = new_error_2[2]
+			p1_err_2 = new_error_2[1]
+			p2_err_2 = new_error_2[0]
 
-		#lowerbound fit from nwindow to E
-		n100_3 = (p2_root + p2_root_err)*E**2 + (p1_root+p1_root_err)*E + (p0_root+p0_root_err)
-		new_fit_3,new_error_matrix_3 = np.polyfit(n100_3,E,2,cov=True)
-		p0_3 = new_fit_3[2]
-		p1_3 = new_fit_3[1]
-		p2_3 = new_fit_3[0]
-		new_error_3 = np.sqrt(np.diag(new_error_matrix_3))
-		p0_err_3 = new_error_3[2]
-		p1_err_3 = new_error_3[1]
-		p2_err_3 = new_error_3[0]
-		
-		fit_err = (abs(p0*p0_root_err/p0_root),abs(p1*p1_root_err/p1_root),abs(p2*p2_root_err/p2_root))
+			#lowerbound fit from nwindow to E
+			n100_3 = (p2_root + p2_root_err)*E**2 + (p1_root+p1_root_err)*E + (p0_root+p0_root_err)
+			new_fit_3,new_error_matrix_3 = np.polyfit(n100_3,E,2,cov=True)
+			p0_3 = new_fit_3[2]
+			p1_3 = new_fit_3[1]
+			p2_3 = new_fit_3[0]
+			new_error_3 = np.sqrt(np.diag(new_error_matrix_3))
+			p0_err_3 = new_error_3[2]
+			p1_err_3 = new_error_3[1]
+			p2_err_3 = new_error_3[0]
+			
+			fit_err = (abs(p0*p0_root_err/p0_root),abs(p1*p1_root_err/p1_root),abs(p2*p2_root_err/p2_root))
 
-		print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]),fit[1],abs(fit_err[1]),fit[2],abs(fit_err[2])))
+			print("\np0 = %.5e +/- %.5e\np1 = %.5e +/- %.5e\np2 = %.5e +/- %.5e\n" % (fit[0],abs(fit_err[0]),fit[1],abs(fit_err[1]),fit[2],abs(fit_err[2])))
 
 		del c1
 
 		return (fit,fit_err)
 		
 	def call_fit(self):
-		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
-		fit,fit_err = self.make_fit(conditions)
 		medium,medium_save = self.medium_detect()
+		if "wbls" in medium_save:
+			conditions = "innerPE > 0.25 && closestPMT > 0 && %s > 0" % self.nwindow
+		elif "wbls" not in medium_save:
+			conditions = "innerPE > 0.25 && -3000 < x < 3000 && -3000 < z < 3000 && %s > 0" % self.nwindow
 		save_dir = self.make_directory(medium_save)
+		conditions = "innerPE > 0.25 && closestPMT > 0 && %s > 0" % self.nwindow
+		fit,fit_err = self.make_fit(conditions)
 		
 		with open("%s/stats_%s.txt" % (save_dir,medium_save),'w') as stats:
 			stats.write("Medium = %s\n" % medium)
@@ -261,13 +302,19 @@ class Energy_Fitter():
 			stats.write("p0 error = %.5e\n" % fit_err[0])
 			stats.write("p1 = %.5e\n" % fit[1])
 			stats.write("p1 error = %.5e\n" % fit_err[1])
-			stats.write("p2 = %.5e\n" % fit[2])
-			stats.write("p2 error = %.5e\n" % fit_err[2])
+			if self.charge == 0:
+				stats.write("p2 = %.5e\n" % fit[2])
+				stats.write("p2 error = %.5e\n" % fit_err[2])
+			elif self.charge == 1:
+				stats.write("p2 = 0\n")
+				stats.write("p2 error = 0\n")
 
 	def resolution_testing(self):
 		medium,medium_save = self.medium_detect()
-		conditions = "closestPMT > 0 && %s > 0" % self.nwindow
-		#conditions = "(x*x+z*z)<3000*3000 && %s > 0" % self.nwindow
+		if "wbls" in medium_save:
+			conditions = "closestPMT > 0 && %s > 0" % self.nwindow
+		elif "wbls" not in medium_save:
+			conditions = "-3000 < x < 3000 && -3000 < z < 3000 && %s > 0" % self.nwindow
 		fit,fit_err = self.make_fit(conditions)
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		save_dir = self.make_directory(medium_save)
@@ -275,17 +322,30 @@ class Energy_Fitter():
 			os.remove("%s/stats_%s.txt" % (save_dir,medium_save))
 		except:
 			print("%s/stats_%s.txt not found" % (save_dir,medium_save))
-		graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
-		gROOT.SetBatch(True)
-		c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
-		self.bonsai_t.Draw(graph,conditions)
-		deltaE = root.gDirectory.Get("deltaE")
-		deltaE.Fit("gaus","Q")
-		gStyle.SetOptFit(11)
-		deltaE.SetTitle("#DeltaE %s" % medium)
-		deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
-		deltaE.GetXaxis().SetRangeUser(-.4*E[-1],.4*Emax[-1])
-		c_all.SaveAs("%s/Gaussian_fit_%s.png"%(save_dir,medium_save))
+		if self.charge == 1:
+			graph = ("(%f*innerPE) + %f - mc_energy>>deltaE" % (fit[1],fit[0]))
+			gROOT.SetBatch(True)
+			c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
+			self.bonsai_t.Draw(graph,conditions)
+			deltaE = root.gDirectory.Get("deltaE")
+			deltaE.Fit("gaus","Q")
+			gStyle.SetOptFit(11)
+			deltaE.SetTitle("#DeltaE %s" % medium)
+			deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
+			deltaE.GetXaxis().SetRangeUser(-.4*E[-1],.4*Emax[-1])
+			c_all.SaveAs("%s/Gaussian_fit_%s.png"%(save_dir,medium_save))
+		else:
+			graph = ("(%s*%s*%f) + (%s*%f) + %f - mc_energy>>deltaE" % (self.nwindow,self.nwindow,fit[2],self.nwindow,fit[1],fit[0]))
+			gROOT.SetBatch(True)
+			c_all = TCanvas( "c_all" , "Delta E "+medium, 200, 10, 700 ,500)
+			self.bonsai_t.Draw(graph,conditions)
+			deltaE = root.gDirectory.Get("deltaE")
+			deltaE.Fit("gaus","Q")
+			gStyle.SetOptFit(11)
+			deltaE.SetTitle("#DeltaE %s" % medium)
+			deltaE.GetXaxis().SetTitle("#DeltaE [MeV]")
+			deltaE.GetXaxis().SetRangeUser(-.4*E[-1],.4*Emax[-1])
+			c_all.SaveAs("%s/Gaussian_fit_%s.png"%(save_dir,medium_save))
 
 		del c_all
 		del deltaE
@@ -298,8 +358,12 @@ class Energy_Fitter():
 			stats.write("p0 error = %.5e\n" % fit_err[0])
 			stats.write("p1 = %.5e\n" % fit[1])
 			stats.write("p1 error = %.5e\n" % fit_err[1])
-			stats.write("p2 = %.5e\n" % fit[2])
-			stats.write("p2 error = %.5e\n" % fit_err[2])
+			if self.charge == 0:
+				stats.write("p2 = %.5e\n" % fit[2])
+				stats.write("p2 error = %.5e\n" % fit_err[2])
+			elif self.charge == 1:
+				stats.write("p2 = 0\n")
+				stats.write("p2 error = 0\n")
 
 		for i in tqdm(range(len(E_cut)),desc="Applying fit to all energies"):
 			c1 = TCanvas("c1" , "Delta E "+medium, 200, 10, 700 ,500)
