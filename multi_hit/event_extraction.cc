@@ -2,7 +2,7 @@
 // Also outputs MC and pmt hit data to csvfile
 // Author: Stephen Wilson, February 2020
 // Heavily adapted from get_features.cc by Elisabeth Kneale, November 2020
-// what was adapted in part from bonsai.cc for rat-pac (M. Smy)
+// which was adapted in part from bonsai.cc for rat-pac (M. Smy)
 // To compile (requires Makefile):
 // make get_features
 // To run:
