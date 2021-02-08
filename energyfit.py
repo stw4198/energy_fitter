@@ -155,27 +155,6 @@ class Energy_Fitter():
 		
 	
 	def make_directory(self,medium_save):
-
-		#if self.savedir == '':
-		#
-		#	if os.path.isdir("../%s_%f" % (medium_save,self.interval)):
-		#		print("../%s_%f exists" % (medium_save,self.interval))
-		#	else:
-		#		os.mkdir("../%s_%f" % (medium_save,self.interval))
-		#	if self.charge==1:
-		#		save_dir = "../%s_%f" % (medium_save,self.interval)
-		#	else:
-		#		save_dir = "../%s_%f" % (medium_save,self.interval)
-
-		#else:
-		#	if os.path.isdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir)):
-		#		print("../%s_%f_%s exists" % (medium_save,self.interval,self.savedir))
-		#	else:
-		#		os.mkdir("../%s_%f_%s" % (medium_save,self.interval,self.savedir))
-		#	if self.charge==1:
-		#		save_dir = "../%s_%f_%s" % (medium_save,self.interval,self.savedir)
-		#	else:
-		#		save_dir = "../%s_%f_%s" % (medium_save,self.interval,self.savedir)
 				
 		if self.savedir == '':
 		
