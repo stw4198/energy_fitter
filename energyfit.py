@@ -173,17 +173,17 @@ class Energy_Fitter():
 		else:
 			
 			if self.charge == 1:
-				if os.path.isdir("../%s_charge_%f" % (medium_save,self.savedir)):
-					print("../%s_charge_%f exists" % (medium_save,self.savedir))
+				if os.path.isdir("../%s_charge_%s" % (medium_save,self.savedir)):
+					print("../%s_charge_%s exists" % (medium_save,self.savedir))
 				else:
-					os.mkdir("../%s_charge_%f" % (medium_save,self.savedir))
-				save_dir = ("../%s_charge_%f" % (medium_save,self.savedir))
+					os.mkdir("../%s_charge_%s" % (medium_save,self.savedir))
+				save_dir = ("../%s_charge_%s" % (medium_save,self.savedir))
 			else:
-				if os.path.isdir("../%s_%f" % (medium_save,self.savedir)):
-					print("../%s_%f exists" % (medium_save,self.savedir))
+				if os.path.isdir("../%s_%s" % (medium_save,self.savedir)):
+					print("../%s_%s exists" % (medium_save,self.savedir))
 				else:
-					os.mkdir("../%s_%f" % (medium_save,self.savedir))
-				save_dir = ("../%s_%f" % (medium_save,self.savedir))
+					os.mkdir("../%s_%s" % (medium_save,self.savedir))
+				save_dir = ("../%s_%s" % (medium_save,self.savedir))
 
 
 		return save_dir
@@ -382,7 +382,7 @@ class Energy_Fitter():
 			mean_err = deltaE.GetFunction("gaus").GetParError(1)
 			resolution = deltaE.GetFunction("gaus").GetParameter(2)/E[i]
 			resolution_err = resolution * np.sqrt((1/np.sqrt(n))**2 + (sigma_err/sigma)**2)
-
+			
 			with open("%s/stats_%s.txt" % (save_dir,medium_save),'a') as stats:
 				stats.write("\nEnergy [MeV] = %f\n" % E[i])
 				stats.write("Energy range [MeV] = +/- %f\n" % float(self.interval/np.sqrt(12)))

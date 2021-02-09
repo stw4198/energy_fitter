@@ -77,7 +77,7 @@ def fit(e,a,b,c):
 	return(a/np.sqrt(e) + b + c/e)
 
 interval = 0.25
-pos = 'charge'
+pos = 'charge_cylinder'
 
 if pos == 'off':
 
@@ -267,7 +267,7 @@ elif pos == 'centre':
 	
 elif pos == 'letterbox':
 
-	interval = 0.5
+	interval = 0.25
 
 	res_8_50_8_10pct,res_err_8_50_8_10pct,en_8_50_8_10pct,en_err_8_50_8_10pct = value_extraction("8_50_8_10pct",'')
 	res_8_50_8_15pct,res_err_8_50_8_15pct,en_8_50_8_15pct,en_err_8_50_8_15pct = value_extraction("8_50_8_15pct",'')
@@ -475,4 +475,198 @@ elif pos == 'charge':
 	plt.grid()
 	plt.savefig("../charge_vs_nhits_5pct_whole.png")
 	plt.show()
+	
+elif pos=='charge_letterbox':
 
+	interval = 0.25
+	
+	energy = np.arange(interval,10.+interval,interval)
+	energy_err = interval/np.sqrt(12)
+
+	res_8_50_8_10pct,res_err_8_50_8_10pct,en_8_50_8_10pct,en_err_8_50_8_10pct = value_extraction("8_50_8_10pct",'')
+	res_8_50_8_15pct,res_err_8_50_8_15pct,en_8_50_8_15pct,en_err_8_50_8_15pct = value_extraction("8_50_8_15pct",'')
+	res_8_50_8_20pct,res_err_8_50_8_20pct,en_8_50_8_20pct,en_err_8_50_8_20pct = value_extraction("8_50_8_20pct",'')
+	res_8_80_8_10pct,res_err_8_80_8_10pct,en_8_80_8_10pct,en_err_8_80_8_10pct = value_extraction("8_80_8_10pct",'')
+	res_8_80_8_15pct,res_err_8_80_8_15pct,en_8_80_8_15pct,en_err_8_80_8_15pct = value_extraction("8_80_8_15pct",'')
+	res_8_80_8_20pct,res_err_8_80_8_20pct,en_8_80_8_20pct,en_err_8_80_8_20pct = value_extraction("8_80_8_20pct",'')
+	
+	res_8_50_8_10pct_q,res_err_8_50_8_10pct_q,en_8_50_8_10pct_q,en_err_8_50_8_10pct_q = value_extraction("8_50_8_10pct",'_charge')
+	res_8_50_8_15pct_q,res_err_8_50_8_15pct_q,en_8_50_8_15pct_q,en_err_8_50_8_15pct_q = value_extraction("8_50_8_15pct",'_charge')
+	res_8_50_8_20pct_q,res_err_8_50_8_20pct_q,en_8_50_8_20pct_q,en_err_8_50_8_20pct_q = value_extraction("8_50_8_20pct",'_charge')
+	res_8_80_8_10pct_q,res_err_8_80_8_10pct_q,en_8_80_8_10pct_q,en_err_8_80_8_10pct_q = value_extraction("8_80_8_10pct",'_charge')
+	res_8_80_8_15pct_q,res_err_8_80_8_15pct_q,en_8_80_8_15pct_q,en_err_8_80_8_15pct_q = value_extraction("8_80_8_15pct",'_charge')
+	res_8_80_8_20pct_q,res_err_8_80_8_20pct_q,en_8_80_8_20pct_q,en_err_8_80_8_20pct_q = value_extraction("8_80_8_20pct",'_charge')
+	
+	popt_50_10, pcov_50_10 = curve_fit(fit, energy, res_8_50_8_10pct_q)
+	popt_50_15, pcov_50_15 = curve_fit(fit, energy, res_8_50_8_15pct_q)
+	popt_50_20, pcov_50_20 = curve_fit(fit, energy, res_8_50_8_20pct_q)
+	popt_80_10, pcov_80_10 = curve_fit(fit, energy, res_8_80_8_10pct_q)
+	popt_80_15, pcov_80_15 = curve_fit(fit, energy, res_8_80_8_15pct_q)
+	popt_80_20, pcov_80_20 = curve_fit(fit, energy, res_8_80_8_20pct_q)
+
+	
+	plt.errorbar(energy[1:-1],res_8_50_8_10pct[1:-1],yerr=res_err_8_50_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_50_8_10pct_q[1:-1],yerr=res_err_8_50_8_10pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_50_10),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_50_10))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC 50 m Letterbox")
+	plt.grid()
+	plt.savefig("../10pct_50_letterbox_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_8_50_8_15pct[1:-1],yerr=res_err_8_50_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_50_8_15pct_q[1:-1],yerr=res_err_8_50_8_15pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_50_15),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_50_15))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC 50 m Letterbox")
+	plt.grid()
+	plt.savefig("../15pct_50_letterbox_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_8_50_8_20pct[1:-1],yerr=res_err_8_50_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_50_8_20pct_q[1:-1],yerr=res_err_8_50_8_20pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_50_20),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_50_20))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC 50 m Letterbox")
+	plt.grid()
+	plt.savefig("../20pct_50_letterbox_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_8_80_8_10pct[1:-1],yerr=res_err_8_80_8_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_80_8_10pct_q[1:-1],yerr=res_err_8_80_8_10pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_80_10),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_80_10))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC 80 m Letterbox")
+	plt.grid()
+	plt.savefig("../10pct_80_letterbox_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_8_80_8_15pct[1:-1],yerr=res_err_8_80_8_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_80_8_15pct_q[1:-1],yerr=res_err_8_80_8_15pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_80_15),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_80_15))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC 80 m Letterbox")
+	plt.grid()
+	plt.savefig("../15pct_80_letterbox_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_8_80_8_20pct[1:-1],yerr=res_err_8_80_8_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_8_80_8_20pct_q[1:-1],yerr=res_err_8_80_8_20pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_80_20),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_80_20))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC 80 m Letterbox")
+	plt.grid()
+	plt.savefig("../20pct_80_letterbox_pe_nhits.png")
+	plt.show()
+	
+elif pos=='charge_cylinder':
+
+	interval = 0.25
+
+	energy = np.arange(interval,10.+interval,interval)
+	energy_err = interval/np.sqrt(12)
+
+	res_10_10_10pct, res_err_10_10_10pct, en_10_10_10pct, en_err_10_10_10pct = value_extraction("10_10_10pct",'')
+	res_10_10_15pct, res_err_10_10_15pct, en_10_10_15pct, en_err_10_10_15pct = value_extraction("10_10_15pct",'')
+	res_10_10_20pct, res_err_10_10_20pct, en_10_10_20pct, en_err_10_10_20pct = value_extraction("10_10_20pct",'')
+	res_12_12_10pct, res_err_12_12_10pct, en_12_12_10pct, en_err_20_20_10pct = value_extraction("12_12_10pct",'')
+	res_12_12_15pct, res_err_12_12_15pct, en_12_12_15pct, en_err_20_20_15pct = value_extraction("12_12_15pct",'')
+	res_12_12_20pct, res_err_12_12_20pct, en_12_12_20pct, en_err_20_20_20pct = value_extraction("12_12_20pct",'')
+	
+	res_10_10_10pct_q, res_err_10_10_10pct_q, en_10_10_10pct_q, en_err_10_10_10pct_q = value_extraction("10_10_10pct",'_charge')
+	res_10_10_15pct_q, res_err_10_10_15pct_q, en_10_10_15pct_q, en_err_10_10_15pct_q = value_extraction("10_10_15pct",'_charge')
+	res_10_10_20pct_q, res_err_10_10_20pct_q, en_10_10_20pct_q, en_err_10_10_20pct_q = value_extraction("10_10_20pct",'_charge')
+	res_12_12_10pct_q, res_err_12_12_10pct_q, en_12_12_10pct_q, en_err_20_20_10pct_q = value_extraction("12_12_10pct",'_charge')
+	res_12_12_15pct_q, res_err_12_12_15pct_q, en_12_12_15pct_q, en_err_20_20_15pct_q = value_extraction("12_12_15pct",'_charge')
+	res_12_12_20pct_q, res_err_12_12_20pct_q, en_12_12_20pct_q, en_err_20_20_20pct_q = value_extraction("12_12_20pct",'_charge')
+	
+	popt_10_10, pcov_10_10 = curve_fit(fit, energy, res_10_10_10pct_q)
+	popt_10_15, pcov_10_15 = curve_fit(fit, energy, res_10_10_15pct_q)
+	popt_10_20, pcov_10_20 = curve_fit(fit, energy, res_10_10_20pct_q)
+	popt_12_10, pcov_12_10 = curve_fit(fit, energy, res_12_12_10pct_q)
+	popt_12_15, pcov_12_15 = curve_fit(fit, energy, res_12_12_15pct_q)
+	popt_12_20, pcov_12_20 = curve_fit(fit, energy, res_12_12_20pct_q)
+	
+	plt.errorbar(energy[1:-1],res_10_10_10pct[1:-1],yerr=res_err_10_10_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_10_10_10pct_q[1:-1],yerr=res_err_10_10_10pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_10_10),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_10_10))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC 10 m x 10 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_10_10_10pct[1])
+	plt.savefig("../10pct_10_10_cylinder_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_10_10_15pct[1:-1],yerr=res_err_10_10_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_10_10_15pct_q[1:-1],yerr=res_err_10_10_15pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_10_15),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_10_15))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC 10 m x 10 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_10_10_10pct[1])
+	plt.savefig("../15pct_10_10_cylinder_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_10_10_20pct[1:-1],yerr=res_err_10_10_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_10_10_20pct_q[1:-1],yerr=res_err_10_10_20pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_10_20),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_10_20))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC 10 m x 10 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_10_10_10pct[1])
+	plt.savefig("../20pct_10_10_cylinder_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_12_12_10pct[1:-1],yerr=res_err_12_12_10pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_12_12_10pct_q[1:-1],yerr=res_err_12_12_10pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_12_10),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_12_10))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("10% PC 12 m x 12 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_12_12_10pct[1])
+	plt.savefig("../10pct_12_12_cylinder_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_12_12_15pct[1:-1],yerr=res_err_12_12_15pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_12_12_15pct_q[1:-1],yerr=res_err_12_12_15pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_12_15),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_12_15))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("15% PC 12 m x 12 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_12_12_10pct[1])
+	plt.savefig("../15pct_12_12_cylinder_pe_nhits.png")
+	plt.show()
+	
+	plt.errorbar(energy[1:-1],res_12_12_20pct[1:-1],yerr=res_err_12_12_20pct[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[3],label='nhits')
+	plt.errorbar(energy[1:-1],res_12_12_20pct_q[1:-1],yerr=res_err_12_12_20pct_q[1:-1],xerr=energy_err,linestyle='none',color=Tol_bright[7],label='pe')
+	plt.errorbar(energy,fit(energy,*popt_12_20),color=Tol_bright[0],label='pe fit: %5.3f/$\sqrt{E}$ + %5.3f + %5.3f/E' % tuple(popt_12_20))
+	plt.xlabel('Kinetic energy [MeV]')
+	plt.ylabel("Resolution [\u03C3/E]")
+	plt.legend()
+	plt.title("20% PC 12 m x 12 m Cylinder")
+	plt.grid()
+	#plt.ylim(0,2*res_12_12_10pct[1])
+	plt.savefig("../20pct_12_12_cylinder_pe_nhits.png")
+	plt.show()
