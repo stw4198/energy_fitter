@@ -6,7 +6,7 @@
 // To compile (requires Makefile):
 // make get_features
 // To run:
-// ./get_features ratds.root outfile.csv
+// ./get_features ratds.root outfiles.csv
 
 #include <iostream>
 #include <fstream>
