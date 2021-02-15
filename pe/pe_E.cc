@@ -70,7 +70,7 @@ void pe_E(){
   printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
   printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
   
-  double e = plot_res(res,interval);
+  std::vector<double> res_params = plot_res(res,interval);
   
 }
 
@@ -193,44 +193,7 @@ Double_t fit_func(Double_t *x, Double_t *par){
 
 }
 
-/*double fit_resolution(const char* file, std::vector<std::vector<double>> res_plus_err) {
-
-  //std::vector<double> resolution = res_plus_err[0];
-  //std::vector<double> resolution_err = res_plus_err[1];
-  //std::vector<double> energy = res_plus_err[2];
-  
-  //double a;
-  //double b;
-  //double c;
-  
-  //const char* tgraph = Form("%s:%s>>hist",y_var,x_var);
-
-  TCanvas *fit_res = new TCanvas("Fit", "Fit");
-  TFile* f = new TFile(file);
-  TTree *t = (TTree*)f->Get("data");
-  
-  t->Draw("trueEnergy:innerPE>>hist","innerPE>0.25");
-  TH2 *hist = (TH2*)gDirectory->Get("hist");
-  //hist->Fit("pol1","Q");
-  
-  TF1 *fit_func = new TF1("fit_func",fit_func,0,10,3);
-  fit_func->SetParameters(0,0,0);
-  fit_func->SetParNames("p0","p1","p2");
-  hist->Fit(fit_func,"r");
-  
-  fit_res->Draw();
-  
-  //res_fit = 
-  delete hist;
-  delete fit_res;
-  delete f;
-  
-  double e = 1;
-  return e;
-  //return fit_params;
-}*/
-
-double plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
+std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
 
   std::vector<double> resolution = res_plus_err[0];
   std::vector<double> resolution_err = res_plus_err[1];
@@ -261,33 +224,40 @@ double plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
   leg->SetFillColor(0);
   graph->SetFillColor(0);
   leg->AddEntry(graph,"pe fit","lE");
-  //leg.AddEntry(&function_3_2_1,"Th. Law");
   leg->DrawClone("Same");
   
   Canvas_3_2_1->SaveAs("test.pdf");
   Canvas_3_2_1->Draw();
   
-  //TF1 *fit_func = new TF1("fit_func",fit_func,0,10,3);
   TCanvas *canvas = new TCanvas("canvas", "fit");
   TH2D *hist = new TH2D("hist", "Resolution Fit",100,en_arr[0],en_arr[n],100,res_arr[n],res_arr[0]);
   for(int i=0;i<n;i++){
     hist->Fill(en_arr[i],res_arr[i]);
   }
+  
+  TF1 *fitfn = new TF1("fitfn",fit_func,0,10,3);
+  fitfn->SetParameter(0,0);
+  fitfn->SetParameter(1,0);
+  fitfn->SetParameter(2,0);
+  
+  hist->Fit("fitfn");
+  
+  TF1 *fitresult = hist->GetFunction("fitfn");
+
+  double a = fitresult->GetParameter(0);
+  double b = fitresult->GetParameter(1);
+  double c = fitresult->GetParameter(2);
+  
   hist->SetMarkerStyle(2);
   hist->Draw();
   canvas->SaveAs("hist.pdf");
   
-  /*fit_func->SetParameter(0,0);
-  fit_func->SetParameter(1,0);
-  fit_func->SetParameter(2,0);
+  std::vector<double> params;
   
-  TF1 *fitresult = hist->GetFunction(&fit_func);
-
-  double a = fitresult->GetParameter(0);
-  double b = fitresult->GetParameter(1);
-  double c = fitresult->GetParameter(2);*/
+  params.push_back(a);
+  params.push_back(b);
+  params.push_back(c);
   
-  double e = 1;
-  return e;
+  return params;
 
 }
