@@ -312,9 +312,9 @@ class Energy_Fitter():
 	def resolution_testing(self):
 		medium,medium_save = self.medium_detect()
 		if "wbls" in medium_save:
-			conditions = "closestPMT > 0 && %s > 0" % self.nwindow
+			conditions = "closestPMT > 0 && innerPE > 0.25 && %s > 0" % self.nwindow
 		elif "wbls" not in medium_save:
-			conditions = "-3000 < x < 3000 && -3000 < z < 3000 && %s > 0" % self.nwindow
+			conditions = "innerPE > 0.25 && -3000 < x < 3000 && -3000 < z < 3000 && %s > 0" % self.nwindow
 		fit,fit_err = self.make_fit(conditions)
 		mc_energy,Emax,E,E_cut = self.energy_values(self.interval)
 		save_dir = self.make_directory(medium_save)
