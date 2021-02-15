@@ -4,8 +4,6 @@
 #include <iomanip>
 #include <math.h>
 
-//using namespace std;
-
 #include <RAT/DS/Run.hh>
 #include <RAT/DS/PMTInfo.hh>
 #include <RAT/DS/Root.hh>
@@ -19,12 +17,10 @@
 #include <TTree.h>
 #include <TCanvas.h>
 #include <TString.h>
+#include <TLegend.h>
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TH2.h"
-//#include "TStyle.h"
-
-// Produce fit between two variables in ROOT
 
 int main(){
 
@@ -115,18 +111,8 @@ std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* 
 
 std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, double interval){
 
-//need energy as input
-//extract number of unique energy values?
-//extract min and max energy
-//set interval
-//loop over all energy cuts
-
   std::vector<double> fit = params[0];
   std::vector<double> fit_err = params[1];
-  /*double p0 = param[0];
-  double p1 = param[1];
-  double p0_err = param_err[0];
-  double p1_err = param_err[1];*/
 
   std::vector<double> resolution;
   std::vector<double> resolution_err;
@@ -139,8 +125,8 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
   const char* tgraph = Form("(%f*%s) + (%f) - %s>>hist",fit[1],x_var,fit[0],y_var);
   
   std::vector<double> y_int = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; //set dynamically
+  //std::vector<double> y_int = {0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5};
   
-  //loop over list of energy values, not true energy
   for(int i = 0; i<y_int.size(); i++) {
   
     double y1 = y_int[i] - interval;
@@ -210,53 +196,48 @@ std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,doubl
   double en_err[n];
   std::fill_n(en_err, n, interval/sqrt(12));
   
-  TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
-  graph->SetMarkerStyle(2);
-  graph->SetMarkerColor(6);
-  graph->SetLineColor(6);
-  TCanvas *Canvas_3_2_1 = new TCanvas("Resolution", "Resolution");
-  graph->GetXaxis()->SetTitle("E_{true} [MeV]");
-  graph->GetYaxis()->SetTitle("#sigma/E");
-  graph->GetYaxis()->SetTitleOffset(1.1);
-  graph->DrawClone("APE");
-  
-  TLegend *leg = new TLegend(.7,.7,.9,.9,"Resolution");
-  leg->SetFillColor(0);
-  graph->SetFillColor(0);
-  leg->AddEntry(graph,"pe fit","lE");
-  leg->DrawClone("Same");
-  
-  Canvas_3_2_1->SaveAs("test.pdf");
-  Canvas_3_2_1->Draw();
-  
-  TCanvas *canvas = new TCanvas("canvas", "fit");
-  TH2D *hist = new TH2D("hist", "Resolution Fit",100,en_arr[0],en_arr[n],100,res_arr[n],res_arr[0]);
-  for(int i=0;i<n;i++){
-    hist->Fill(en_arr[i],res_arr[i]);
-  }
-  
   TF1 *fitfn = new TF1("fitfn",fit_func,0,10,3);
   fitfn->SetParameter(0,0);
   fitfn->SetParameter(1,0);
   fitfn->SetParameter(2,0);
   
-  hist->Fit("fitfn");
+  TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
+  graph->SetMarkerStyle(2);
+  graph->SetMarkerColor(6);
+  graph->SetLineColor(6);
+  TCanvas *canvas = new TCanvas("Resolution", "Resolution");
+  graph->GetXaxis()->SetTitle("E_{true} [MeV]");
+  graph->GetYaxis()->SetTitle("#sigma/E");
+  graph->GetYaxis()->SetTitleOffset(1.1);
+  graph->DrawClone("APE");
   
-  TF1 *fitresult = hist->GetFunction("fitfn");
+  graph->Fit("fitfn");
+  graph->DrawClone("APE");
+  
+  TLegend *leg = new TLegend(.7,.7,.9,.9,"Resolution");
+  leg->SetFillColor(0);
+  graph->SetFillColor(0);
+  leg->AddEntry(graph,"pe","lE");
+  leg->AddEntry(fitfn,"pe fit");
+  leg->DrawClone("Same");
+  
+  canvas->SaveAs("resolution.pdf");
+  canvas->Draw();
+  
+  TF1 *fitresult = graph->GetFunction("fitfn");
 
   double a = fitresult->GetParameter(0);
   double b = fitresult->GetParameter(1);
   double c = fitresult->GetParameter(2);
   
-  hist->SetMarkerStyle(2);
-  hist->Draw();
-  canvas->SaveAs("hist.pdf");
-  
   std::vector<double> params;
   
   params.push_back(a);
   params.push_back(b);
-  params.push_back(c);
+  
+  delete graph;
+  delete fitfn;
+  delete canvas;
   
   return params;
 
