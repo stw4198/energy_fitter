@@ -1,9 +1,5 @@
-This fitter is designed to work with the file format of the WATCHMAN vertex fitter FRED. It will calculate a fit between an energy estimator and the true energy and apply the fit to calculate energy resolution.
+Two forms of energy fitting for use in neutrino detectors. Each folder has it's own README with instructions for use.
 
-The plotting script is for testing purposes only and is not final.
+python_efit contains a pythonic fitter designed for use on events reconstructed in the WATCHMAN vertex fitter FRED. It is designed to be adjustable by the user, but is not fast or highly organised. The fittig can be done using either photoelectrons desposited on PMTs or the number of PMTs hit in a given time window.
 
-Usage:
-
-python3 energyfit.py {Reconstructed_file}.root {options}
-
-Use --h option to display input options.
+charge_ereco contains a C++ compilable fitter that uses the deposited photoelectrons on the PMT to fit energy. The fitter is designed to be used with either Monte Carlo events from RAT-PAC or with reconstructed events from FRED. If MC events are used, a value extractor is also provided to find all event and PMT hit values. This fitter is much faster as the reconstruction can be skipped.
