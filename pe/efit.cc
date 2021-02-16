@@ -17,7 +17,7 @@ using namespace std;
 #include <TTree.h>
 #include <TApplication.h>
 
-#include "pe_E.cc"
+//#include "pe_E.cc"
 
 //Need to separate the Inner-Detector tubes from the Outer-Detector tubes
 static const int innerPMTcode = 1;
