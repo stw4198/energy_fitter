@@ -1,59 +1,6 @@
 #include "pe_E.h"
 
-void pe_E(const char* file){
-
-  gROOT->SetBatch(kTRUE);
-
-  //const char* file = "MC.root";
-  //const char* file = argv[1];
-  const char* x_var = "innerPE";
-  const char* y_var = "mc_energy";
-  const char* tcut = "innerPE>0.25";
-
-  double interval = 0.25;
-
-  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut);
-  std::vector<double> param = params[0];
-  std::vector<double> param_err = params[1];
-  double p0 = param[0];
-  double p1 = param[1];
-  double p0_err = param_err[0];
-  double p1_err = param_err[1];
-  printf("\np0 = %f +/- %f\np1 = %f +/- %f\n", p0, p0_err, p1, p1_err);
-  
-  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval);
-  std::vector<double> resolutions = res[0];
-  std::vector<double> resolutions_err = res[1];
-  std::vector<double> en = res[2];
-  
-  printf("\nE = %f, res = %f +/- %f\n",en[0],resolutions[0],resolutions_err[0]);
-  printf("\nE = %f, res = %f +/- %f\n",en[1],resolutions[1],resolutions_err[1]);
-  printf("\nE = %f, res = %f +/- %f\n",en[2],resolutions[2],resolutions_err[2]);
-  printf("\nE = %f, res = %f +/- %f\n",en[3],resolutions[3],resolutions_err[3]);
-  printf("\nE = %f, res = %f +/- %f\n",en[4],resolutions[4],resolutions_err[4]);
-  printf("\nE = %f, res = %f +/- %f\n",en[5],resolutions[5],resolutions_err[5]);
-  printf("\nE = %f, res = %f +/- %f\n",en[6],resolutions[6],resolutions_err[6]);
-  printf("\nE = %f, res = %f +/- %f\n",en[7],resolutions[7],resolutions_err[7]);
-  printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
-  printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
-  
-  std::vector<std::vector<double>> res_parameters = plot_res(res,interval);
-  std::vector<double> res_params = res_parameters[0];
-  double a = res_params[0];
-  double b = res_params[1];
-  double c = res_params[2];
-  
-  std::vector<double> res_params_err = res_parameters[1];
-  double a_err = res_params_err[0];
-  double b_err = res_params_err[1];
-  double c_err = res_params_err[2];
-  
-  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
-  printf("\na = %f +/- %f, b = %f +/- %f, c = %f +/- %f\n",a,a_err,b,b_err,c,c_err);
-  
-}
-
-std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut){
+std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut, const char* fit_file, int args){
 
   const char* tgraph = Form("%s:%s>>hist",y_var,x_var);
 
@@ -72,6 +19,14 @@ std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* 
   
   double p0_err = fitresult->GetParError(0);
   double p1_err = fitresult->GetParError(1);
+  
+  if(args>2){
+    std::ofstream params_save;
+    params_save.open (Form("%s.txt",fit_file));
+    params_save << "p0 = " << p0 << " +/- " << p0_err << "\n";
+    params_save << "p1 = " << p1 << " +/- " << p1_err << "\n";
+    params_save.close();
+  }
   
   std::vector<double> params;
   std::vector<double> param_errs;
@@ -92,7 +47,7 @@ std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* 
   return parameters;
 }
 
-std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, double interval){
+std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, double interval, const char* res_file, int args){
 
   std::vector<double> fit = params[0];
   std::vector<double> fit_err = params[1];
@@ -111,6 +66,10 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
   //std::vector<double> y_int = {0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5};
   
   int y_n = y_int.size();
+  
+  if(args>3){
+  std::remove(Form("%s.txt",res_file));
+  }
   
   for(int i = 0; i<y_n; i++) {
   
@@ -136,6 +95,16 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
     double mean_err = hist->GetFunction("gaus")->GetParError(1);
     double res = hist->GetFunction("gaus")->GetParameter(2)/y_int[i];
     double res_err = res * sqrt(1/n + (sigma_err/sigma)*(sigma_err/sigma));
+    
+    if(args>3){
+      std::ofstream res_save;
+      res_save.open (Form("%s.txt",res_file),std::ios_base::app);
+      res_save << "E = " << y_int[i] << " +/- " << interval/sqrt(12) << "\n";
+      res_save << "sigma = " << sigma << " +/- " << sigma_err << "\n";
+      res_save << "resolution = " << res << " +/- " << res_err << "\n";
+      res_save << "mean = " << mean << " +/- " << mean_err << "\n\n";
+      res_save.close();
+    }
   
     resolution.push_back(res);
     resolution_err.push_back(res_err);
@@ -164,7 +133,7 @@ Double_t fit_func(Double_t *x, Double_t *par){
 
 }
 
-std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
+std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_plus_err,double interval, const char* fit_file, const char* plot_name, int args){
 
   std::vector<double> resolution = res_plus_err[0];
   std::vector<double> resolution_err = res_plus_err[1];
@@ -219,7 +188,9 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
   leg->SetTextSize(0.03);
   leg->DrawClone("Same");
   
-  canvas->SaveAs("resolution.pdf","Q");
+  if(args>4){
+    canvas->SaveAs(Form("%s.pdf",plot_name),"Q");
+  }
   canvas->Draw();
   
   std::vector<double> params;
@@ -237,6 +208,16 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
   parameters.push_back(params);
   parameters.push_back(params_err);
   
+  if(args>2){
+    std::ofstream params_save;
+    params_save.open (Form("%s.txt",fit_file),std::ios_base::app);
+    params_save << "a = " << a << " +/- " << a_err << "\n";
+    params_save << "b = " << b << " +/- " << b_err << "\n";
+    params_save << "c = " << c << " +/- " << c_err << "\n";
+    params_save.close();
+  }
+  
+  
   delete graph;
   delete fitfn;
   delete canvas;
@@ -247,9 +228,66 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
 
 int main(int argc, char** argv) {
 
-  //const char* file = "MC.root";
-  const char* file = argv[1];
-  pe_E(file);
+  if (argc<2)
+    {
+      printf("Less than the required number of arguments\n");
+      return -1;
+    }
+    
+  //default values here
+  
+  gROOT->SetBatch(kTRUE);
+  
+  const char* file = argv[1]; //input file
+  int args = argc; //number of arguments
+  const char* fit_file;
+  const char* res_file;
+  const char* plot_name;
+  
+  switch(argc) {
+    case 2:
+      printf("\nOnly input file provided, all other values set to default.\n");
+      break;
+    case 3:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      printf("\n\nSaving fit parameters to %s.txt.\n\n",fit_file);
+      break;
+    case 4:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      res_file = argv[3]; //output file for resolution
+      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt.\n\n",fit_file,res_file);
+      break;
+   case 5:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      res_file = argv[3]; //output file for resolution
+      plot_name = argv[4];
+      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
+      break;
+   /*case 6:
+      const char* fit_file = argv[2]; //output file for fit parameters + resolution fit
+      const char* res_file = argv[3]; //output file for resolution
+      const char* plot_name = argv[4];
+      apply = atoi(argv[5]);
+      prinf("\nSaving fit parameters to %s, resolution to %s. Plotting resolution as %s and applying fit parameters to %s.\n",fit_file,res_file,plot_name,fit_file);
+      break;*/
+  }
+  
+  //need function to apply fit parameters
+  
+  //pe_E(file);
+  
+  const char* x_var = "innerPE";
+  const char* y_var = "mc_energy";
+  const char* tcut = "innerPE>0.25";
+
+  double interval = 0.25;
+
+  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut, fit_file, args);
+  
+  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval,res_file,args);
+  
+  std::vector<std::vector<double>> res_parameters = plot_res(res,interval,fit_file,plot_name,args);
+  
   return 0;
   
 }
