@@ -1,33 +1,6 @@
 #include "pe_E.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <math.h>
 
-#include <TROOT.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TCanvas.h>
-#include <TString.h>
-#include <TLegend.h>
-#include <TApplication.h>
-#include "TGraphErrors.h"
-#include "TF1.h"
-#include "TH2.h"
-
-/*int main(int argc, char** argv){
-
-  void pe_E(int argc, char** argv);
-
-  TApplication app("Energy Fitter", &argc, argv);
-  pe_E(app.Argc(),app.Argv());
-  app.Run();
-
-  return 0;
-
-}*/
-
-void pe_E(const char* file/*int argc, char** argv*/){
+void pe_E(const char* file){
 
   gROOT->SetBatch(kTRUE);
 
@@ -272,10 +245,11 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
 
 }
 
-/*int main() {
+int main(int argc, char** argv) {
 
-  const char* file = "MC.root";
+  //const char* file = "MC.root";
+  const char* file = argv[1];
   pe_E(file);
   return 0;
   
-}*/
+}

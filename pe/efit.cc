@@ -289,8 +289,8 @@ int main(int argc, char** argv)
   run_summary->Write();
   out->Close();
   //End of MC extraction
-  
-  /*const char* file = argv[1];
+
+  /*const char* file = argv[2];
   const char* x_var = "innerPE";
   const char* y_var = "trueEnergy";
   const char* tcut = Form("innerPE>%f",charge_threshold);
@@ -321,12 +321,19 @@ int main(int argc, char** argv)
   printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
   printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
   
-  std::vector<double> res_params = plot_res(res,interval);
+  std::vector<std::vector<double>> res_parameters = plot_res(res,interval);
+  std::vector<double> res_params = res_parameters[0];
   double a = res_params[0];
   double b = res_params[1];
   double c = res_params[2];
   
-  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);*/
+  std::vector<double> res_params_err = res_parameters[1];
+  double a_err = res_params_err[0];
+  double b_err = res_params_err[1];
+  double c_err = res_params_err[2];
+  
+  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
+  printf("\na = %f +/- %f, b = %f +/- %f, c = %f +/- %f\n",a,a_err,b,b_err,c,c_err);*/
   
   return 0;
 }
