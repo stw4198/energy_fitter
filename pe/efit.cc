@@ -1,15 +1,3 @@
-// Extracts the MC and pmt hit information from events.
-// Outputs relevant data to root file.
-// Also outputs MC and pmt hit data to csvfile for use
-// with vertex_reconstruction*.py
-// Author: Elisabeth Kneale, November 2020
-// Adapted in part from bonsai.cc for rat-pac (M. Smy)
-// To compile (requires Makefile):
-// make get_features
-// To run:
-// ./get_features infile.root outfile.root outfile.csv
-// (where infile.root is raw rat output)
-
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -28,6 +16,8 @@ using namespace std;
 #include <TFile.h>
 #include <TTree.h>
 
+//#include "pe_E.cc"
+
 //Need to separate the Inner-Detector tubes from the Outer-Detector tubes
 static const int innerPMTcode = 1;
 static const int vetoPMTcode  = 2;
@@ -43,17 +33,18 @@ int main(int argc, char** argv)
       return -1;
     }
  
-  int detector_threshold = 10;
-  int charge_threshold = 0.25;
+  //MC extraction
+  int detector_threshold = 9;
+  double charge_threshold = 0.25;
   int id;
     
   Int_t    gtid=0, mcid=0, subid=0, tot_nhit=0, vetoHit=0;
   Int_t    innerHit=0,innerHitPrev=0,vetoHitPrev=0,triggers=0;
 
   Double_t totPE=0., innerPE=0., vetoPE=0.;
-  Double_t trueX=0., trueY=0., trueZ=0., trueT=0., trueU=0., trueV=0., trueW=0.;
-  Double_t trueXprev=0., trueYprev=0., trueZprev=0., trueTprev=0., trueUprev=0., trueVprev=0., trueWprev=0.;
-  Double_t trueEnergy=0., trueEnergyPrev=0.;
+  Double_t mcx=0., mcy=0., mcz=0., mct=0., mcu=0., mcv=0., mcw=0.;
+  Double_t mcxprev=0., mcyprev=0., mczprev=0., mctprev=0., mcuprev=0., mcvprev=0., mcwprev=0.;
+  Double_t mc_energy=0., mc_energyPrev=0.;
   Double_t timestamp=0., timestampPrev=0., dt_sub=0., dtPrev_us=0.;
   Int_t sub_event_tally[20] = {};
   Double_t pmtBoundR=0.,pmtBoundZ=0.;
@@ -103,10 +94,10 @@ int main(int argc, char** argv)
   data=new TTree("data","low-energy detector-triggered events");
   ofstream mc_csvfile;
   mc_csvfile.open (argv[3],ofstream::trunc);
-  mc_csvfile << "# trueX,  trueY,  trueZ,  trueU,  trueV,  trueW,  trueT \n";
+  mc_csvfile << "# event, mcx,  mcy,  mcz,  mcu,  mcv,  mcw,  mct \n";
   ofstream hit_csvfile;
   hit_csvfile.open (argv[4],ofstream::trunc);
-  hit_csvfile << "# [x, y, z, t, q]^T for each hit for each sub-event: \n# 5 rows (features) for each sub-event record \n# one column for each hit per 5 rows\n";
+  hit_csvfile << "# event, hit, x, y, z, q, id, t \n";
   
 
   //Define the Integer Tree Leaves
@@ -121,16 +112,16 @@ int main(int argc, char** argv)
   data->Branch("pe",&totPE,"pe/D");
   data->Branch("innerPE",&innerPE,"innerPE/D");
   data->Branch("vetoPE",&vetoPE,"vetoPE/D");
-  data->Branch("trueEnergy",&trueEnergy,"trueEnergy/D");
-  data->Branch("trueEnergyPrev",&trueEnergyPrev,"trueEnergyPrev/D");
-  data->Branch("trueX",&trueX,"trueX/D"); data->Branch("trueY",&trueY,"trueY/D");
-  data->Branch("trueZ",&trueZ,"trueZ/D"); data->Branch("trueT",&trueT,"trueT/D");
-  data->Branch("trueXprev",&trueXprev,"trueXprev/D"); data->Branch("trueYprev",&trueYprev,"trueYprev/D");
-  data->Branch("trueZprev",&trueZprev,"trueZprev/D"); data->Branch("trueTprev",&trueTprev,"trueTprev/D");
-  data->Branch("trueU",&trueU,"trueU/D"); data->Branch("trueV",&trueV,"trueV/D");
-  data->Branch("trueW",&trueW,"trueW/D"); 
-  data->Branch("trueUprev",&trueUprev,"trueUprev/D"); data->Branch("trueVprev",&trueVprev,"trueVprev/D");
-  data->Branch("trueWprev",&trueWprev,"trueWprev/D"); 
+  data->Branch("mc_energy",&mc_energy,"mc_energy/D");
+  data->Branch("mc_energyPrev",&mc_energyPrev,"mc_energyPrev/D");
+  data->Branch("mcx",&mcx,"mcx/D"); data->Branch("mcy",&mcy,"mcy/D");
+  data->Branch("mcz",&mcz,"mcz/D"); data->Branch("mct",&mct,"mct/D");
+  data->Branch("mcxprev",&mcxprev,"mcxprev/D"); data->Branch("mcyprev",&mcyprev,"mcyprev/D");
+  data->Branch("mczprev",&mczprev,"mczprev/D"); data->Branch("mctprev",&mctprev,"mctprev/D");
+  data->Branch("mcu",&mcu,"mcu/D"); data->Branch("mcv",&mcv,"mcv/D");
+  data->Branch("mcw",&mcw,"mcw/D"); 
+  data->Branch("mcuprev",&mcuprev,"mcuprev/D"); data->Branch("mcvprev",&mcvprev,"mcvprev/D");
+  data->Branch("mcwprev",&mcwprev,"mcwprev/D"); 
   
   data->Branch("dt_sub", &dt_sub, "dt_sub/D"); //time of the sub-event trigger from start of the event mc
   data->Branch("dtPrev_us",&dtPrev_us,"dtPrev_us/D"); //global time between consecutive events in us
@@ -212,26 +203,26 @@ int main(int argc, char** argv)
         ev = ds->GetEV(sub_event);
         totPE = ev->GetTotalCharge();
 
-        trueEnergyPrev = trueEnergy;
-        trueXprev = trueX;trueYprev=trueY;trueZprev=trueZ;
+        mc_energyPrev = mc_energy;
+        mcxprev = mcx;mcyprev=mcy;mczprev=mcz;
 
         TVector3 temp;
       
         mc = ds->GetMC();
         prim = mc->GetMCParticle(sub_event); 
-        trueEnergy = prim->GetKE();
+        mc_energy = prim->GetKE();
         temp = prim->GetPosition();
-        trueX = temp.X();
-        trueY = temp.Y();
-        trueZ = temp.Z();
-        trueT    = prim->GetTime(); // local emission time
+        mcx = temp.X();
+        mcy = temp.Y();
+        mcz = temp.Z();
+        mct    = prim->GetTime(); // local emission time
         if (subid>0)
           {
           temp = prim->GetEndPosition();
-          trueX = temp.X(); 
-          trueY = temp.Y(); 
-          trueZ = temp.Z(); 
-          trueT    = prim->GetEndTime(); // should be the time of the neutron capture, may cause an issue with re-triggers
+          mcx = temp.X(); 
+          mcy = temp.Y(); 
+          mcz = temp.Z(); 
+          mct    = prim->GetEndTime(); // should be the time of the neutron capture, may cause an issue with re-triggers
           }
         // get true event timings
         // times are in ns unless specified
@@ -257,6 +248,7 @@ int main(int argc, char** argv)
             hitpmt[innerHit][3]=pmt->GetTime();   //t
             hitpmt[innerHit][4]=pmt->GetCharge(); //q
             innerPE += pmt->GetCharge();
+            hit_csvfile << event << "," << hit << "," << pos[0]*0.1 << "," << pos[1]*0.1 << "," << pos[2]*0.1 << "," << pmt->GetCharge() << "," << id << "," << pmt->GetTime() << "\n";
             innerHit++;
             }
           else if(pmtinfo->GetType(id)== vetoPMTcode)
@@ -276,27 +268,17 @@ int main(int argc, char** argv)
         // get momentum vector and normalize it (find direction)
         temp = prim->GetMomentum();
         temp = temp.Unit();
-        trueU = temp.X();trueV = temp.Y();trueW = temp.Z();
+        mcu = temp.X();mcv = temp.Y();mcw = temp.Z();
         data->Fill();
 
 	// write the mc data to the other csvfile
-	mc_csvfile << trueX << "," << trueY << "," << trueZ << "," << trueU << "," << trueV << "," << trueW << "," << trueT << "\n";
+	mc_csvfile << event << "," << mcx << "," << mcy << "," << mcz << "," << mcu << "," << mcv << "," << mcw << "," << mct << "\n";
         //save reference values for the next subevent
-        trueEnergyPrev = trueEnergy;
-        trueXprev = trueX;trueYprev=trueY;trueZprev=trueZ;
+        mc_energyPrev = mc_energy;
+        mcxprev = mcx;mcyprev=mcy;mczprev=mcz;
         timestampPrev = timestamp;
         innerHitPrev = innerHit;
         vetoHitPrev = vetoHit;
-	// write the hit data to the csvfile
-	for(int feature=0;feature<5;feature++)
-          {
-          for(hit=0; hit<innerHit; hit++)
-            {
-            if (hit==innerHit-1) hit_csvfile << hitpmt[hit][feature];
-	    else hit_csvfile << hitpmt[hit][feature] << ",";
-            }
-          hit_csvfile << "\n";
-	  }
       } 
     }
   cout << triggers << " triggered events" << endl;
@@ -305,5 +287,45 @@ int main(int argc, char** argv)
   run_summary->Fill();
   run_summary->Write();
   out->Close();
+  //End of MC extraction
+  
+  /*const char* file = argv[1];
+  const char* x_var = "innerPE";
+  const char* y_var = "trueEnergy";
+  const char* tcut = Form("innerPE>%f",charge_threshold);
+  double interval = 0.25;
+  
+  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut);
+  std::vector<double> param = params[0];
+  std::vector<double> param_err = params[1];
+  double p0 = param[0];
+  double p1 = param[1];
+  double p0_err = param_err[0];
+  double p1_err = param_err[1];
+  printf("\np0 = %f +/- %f\np1 = %f +/- %f\n", p0, p0_err, p1, p1_err);
+  
+  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval);
+  std::vector<double> resolutions = res[0];
+  std::vector<double> resolutions_err = res[1];
+  std::vector<double> en = res[2];
+  
+  printf("\nE = %f, res = %f +/- %f\n",en[0],resolutions[0],resolutions_err[0]);
+  printf("\nE = %f, res = %f +/- %f\n",en[1],resolutions[1],resolutions_err[1]);
+  printf("\nE = %f, res = %f +/- %f\n",en[2],resolutions[2],resolutions_err[2]);
+  printf("\nE = %f, res = %f +/- %f\n",en[3],resolutions[3],resolutions_err[3]);
+  printf("\nE = %f, res = %f +/- %f\n",en[4],resolutions[4],resolutions_err[4]);
+  printf("\nE = %f, res = %f +/- %f\n",en[5],resolutions[5],resolutions_err[5]);
+  printf("\nE = %f, res = %f +/- %f\n",en[6],resolutions[6],resolutions_err[6]);
+  printf("\nE = %f, res = %f +/- %f\n",en[7],resolutions[7],resolutions_err[7]);
+  printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
+  printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
+  
+  std::vector<double> res_params = plot_res(res,interval);
+  double a = res_params[0];
+  double b = res_params[1];
+  double c = res_params[2];
+  
+  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);*/
+  
   return 0;
 }

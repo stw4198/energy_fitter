@@ -22,7 +22,7 @@
 #include "TF1.h"
 #include "TH2.h"
 
-int main(){
+/*int main(){
 
   void pe_E();
 
@@ -67,8 +67,13 @@ void pe_E(){
   printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
   
   std::vector<double> res_params = plot_res(res,interval);
+  double a = res_params[0];
+  double b = res_params[1];
+  double c = res_params[2];
   
-}
+  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
+  
+}*/
 
 std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut){
 
@@ -209,19 +214,23 @@ std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,doubl
   graph->GetXaxis()->SetTitle("E_{true} [MeV]");
   graph->GetYaxis()->SetTitle("#sigma/E");
   graph->GetYaxis()->SetTitleOffset(1.1);
+  graph->SetTitle("Resolution");
+  //graph->DrawClone("APE");
+  
+  graph->Fit("fitfn","Q");
+  //fitfn->SetLineColor(6);
+  //fitfn->DrawClone("Same");
   graph->DrawClone("APE");
   
-  graph->Fit("fitfn");
-  graph->DrawClone("APE");
-  
-  TLegend *leg = new TLegend(.7,.7,.9,.9,"Resolution");
+  TLegend *leg = new TLegend(.7,.7,.9,.9);//,"Resolution");
   leg->SetFillColor(0);
   graph->SetFillColor(0);
   leg->AddEntry(graph,"pe","lE");
   leg->AddEntry(fitfn,"pe fit");
+  leg->SetTextSize(0.05);
   leg->DrawClone("Same");
   
-  canvas->SaveAs("resolution.pdf");
+  canvas->SaveAs("resolution.pdf","Q");
   canvas->Draw();
   
   TF1 *fitresult = graph->GetFunction("fitfn");
@@ -234,6 +243,7 @@ std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,doubl
   
   params.push_back(a);
   params.push_back(b);
+  params.push_back(c);
   
   delete graph;
   delete fitfn;
