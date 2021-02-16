@@ -18,11 +18,12 @@
 #include <TCanvas.h>
 #include <TString.h>
 #include <TLegend.h>
+#include <TApplication.h>
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TH2.h"
 
-/*int main(){
+int main(){
 
   void pe_E();
 
@@ -66,14 +67,21 @@ void pe_E(){
   printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
   printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
   
-  std::vector<double> res_params = plot_res(res,interval);
+  std::vector<std::vector<double>> res_parameters = plot_res(res,interval);
+  std::vector<double> res_params = res_parameters[0];
   double a = res_params[0];
   double b = res_params[1];
   double c = res_params[2];
   
-  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
+  std::vector<double> res_params_err = res_parameters[1];
+  double a_err = res_params_err[0];
+  double b_err = res_params_err[1];
+  double c_err = res_params_err[2];
   
-}*/
+  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
+  printf("\na = %f +/- %f, b = %f +/- %f, c = %f +/- %f\n",a,a_err,b,b_err,c,c_err);
+  
+}
 
 std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut){
 
@@ -184,7 +192,7 @@ Double_t fit_func(Double_t *x, Double_t *par){
 
 }
 
-std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
+std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_plus_err,double interval){
 
   std::vector<double> resolution = res_plus_err[0];
   std::vector<double> resolution_err = res_plus_err[1];
@@ -201,54 +209,66 @@ std::vector<double> plot_res(std::vector<std::vector<double>> res_plus_err,doubl
   double en_err[n];
   std::fill_n(en_err, n, interval/sqrt(12));
   
-  TF1 *fitfn = new TF1("fitfn",fit_func,0,10,3);
+  TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
+  graph->SetMarkerStyle(2);
+  graph->SetMarkerColor(1);
+  graph->SetLineColor(1);
+  TCanvas *canvas = new TCanvas("Resolution", "Resolution");
+  graph->GetXaxis()->SetTitle("E_{MC} [MeV]");
+  graph->GetYaxis()->SetTitle("#sigma_{E}/E_{MC}");
+  graph->GetYaxis()->SetTitleOffset(1.1);
+  graph->SetTitle("Resolution using Photoelectrons");
+  graph->Draw("AP");
+  
+  TF1 *fitfn = new TF1("fitfn",fit_func,0,12,3);
   fitfn->SetParameter(0,0);
   fitfn->SetParameter(1,0);
   fitfn->SetParameter(2,0);
   
-  TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
-  graph->SetMarkerStyle(2);
-  graph->SetMarkerColor(6);
-  graph->SetLineColor(6);
-  TCanvas *canvas = new TCanvas("Resolution", "Resolution");
-  graph->GetXaxis()->SetTitle("E_{true} [MeV]");
-  graph->GetYaxis()->SetTitle("#sigma/E");
-  graph->GetYaxis()->SetTitleOffset(1.1);
-  graph->SetTitle("Resolution");
-  //graph->DrawClone("APE");
+  graph->Fit("fitfn","Q0");
+  fitfn->SetLineColor(6);
+  fitfn->SetLineStyle(2);
+  fitfn->Draw("Same");
   
-  graph->Fit("fitfn","Q");
-  //fitfn->SetLineColor(6);
-  //fitfn->DrawClone("Same");
-  graph->DrawClone("APE");
+  TF1 *fitresult = graph->GetFunction("fitfn");
+
+  double a = fitresult->GetParameter(0);
+  double a_err = fitresult->GetParError(0);
+  double b = fitresult->GetParameter(1);
+  double b_err = fitresult->GetParError(1);
+  double c = fitresult->GetParameter(2);
+  double c_err = fitresult->GetParError(2);
   
-  TLegend *leg = new TLegend(.7,.7,.9,.9);//,"Resolution");
+  TLegend *leg = new TLegend(.55,.7,.9,.9);
   leg->SetFillColor(0);
   graph->SetFillColor(0);
-  leg->AddEntry(graph,"pe","lE");
-  leg->AddEntry(fitfn,"pe fit");
-  leg->SetTextSize(0.05);
+  leg->AddEntry(graph,"resolution (pe)","lE");
+  leg->AddEntry(fitfn,Form("%.3f/#sqrt{E} + %.3f + %.3f/E",a,b,c));
+  leg->SetTextSize(0.03);
   leg->DrawClone("Same");
   
   canvas->SaveAs("resolution.pdf","Q");
   canvas->Draw();
   
-  TF1 *fitresult = graph->GetFunction("fitfn");
-
-  double a = fitresult->GetParameter(0);
-  double b = fitresult->GetParameter(1);
-  double c = fitresult->GetParameter(2);
-  
   std::vector<double> params;
+  std::vector<double> params_err;
+  std::vector<std::vector<double>> parameters;
   
   params.push_back(a);
   params.push_back(b);
   params.push_back(c);
   
+  params_err.push_back(a_err);
+  params_err.push_back(b_err);
+  params_err.push_back(c_err);
+  
+  parameters.push_back(params);
+  parameters.push_back(params_err);
+  
   delete graph;
   delete fitfn;
   delete canvas;
   
-  return params;
+  return parameters;
 
 }
