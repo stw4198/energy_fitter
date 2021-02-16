@@ -1,294 +1,296 @@
-#include <iostream>
-#include <fstream>
-#include <iomanip>
+#include "efit.h"
 
-using namespace std;
+std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut, const char* fit_file, int args){
 
-#include <RAT/DS/Run.hh>
-#include <RAT/DS/PMTInfo.hh>
-#include <RAT/DS/Root.hh>
-#include <RAT/DS/MC.hh>
-#include <RAT/DS/MCParticle.hh>
-#include <RAT/DS/EV.hh>
-#include <RAT/DS/PMT.hh>
+  const char* tgraph = Form("%s:%s>>hist",y_var,x_var);
 
-#include <TROOT.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TApplication.h>
+  TCanvas *fit_prod = new TCanvas("Fit Production", "Fit Production");
+  TFile* f = new TFile(file);
+  TTree *t = (TTree*)f->Get("data");
+  
+  t->Draw(tgraph,tcut);
+  TH2 *hist = (TH2*)gDirectory->Get("hist");
+  hist->Fit("pol1","Q");
+  
+  TF1 *fitresult = hist->GetFunction("pol1");
 
-#include "pe_E.h"
+  double p0 = fitresult->GetParameter(0);
+  double p1 = fitresult->GetParameter(1);
+  
+  double p0_err = fitresult->GetParError(0);
+  double p1_err = fitresult->GetParError(1);
+  
+  if(args>2){
+    std::ofstream params_save;
+    params_save.open (Form("%s.txt",fit_file));
+    params_save << "p0 = " << p0 << " +/- " << p0_err << "\n";
+    params_save << "p1 = " << p1 << " +/- " << p1_err << "\n";
+    params_save.close();
+  }
+  
+  std::vector<double> params;
+  std::vector<double> param_errs;
+  
+  params.push_back(p0);
+  params.push_back(p1);
+  param_errs.push_back(p0_err);
+  param_errs.push_back(p1_err);
+  
+  std::vector<std::vector<double>> parameters;
+  parameters.push_back(params);
+  parameters.push_back(param_errs);
+  
+  delete hist;
+  delete f;
+  delete fit_prod;
+  
+  return parameters;
+}
 
-//Need to separate the Inner-Detector tubes from the Outer-Detector tubes
-static const int innerPMTcode = 1;
-static const int vetoPMTcode  = 2;
+std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, double interval, const char* res_file, int args){
 
+  std::vector<double> fit = params[0];
+  std::vector<double> fit_err = params[1];
 
-int main(int argc, char** argv)
-{
+  std::vector<double> resolution;
+  std::vector<double> resolution_err;
+  
+  //gROOT->SetBatch(True);
+  
+  TFile* f = new TFile(file);
+  TTree *t = (TTree*)f->Get("data");
+  
+  const char* tgraph = Form("(%f*%s) + (%f) - %s>>hist",fit[1],x_var,fit[0],y_var);
+  
+  std::vector<double> y_int = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; //set dynamically
+  //std::vector<double> y_int = {0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5};
+  
+  int y_n = y_int.size();
+  
+  if(args>3){
+  std::remove(Form("%s.txt",res_file));
+  }
+  
+  for(int i = 0; i<y_n; i++) {
+  
+    double y1 = y_int[i] - interval;
+    double y2 = y_int[i] + interval;
+    
+    TCanvas *fit_canvas = new TCanvas("Fitted Data", "Fit");
+    
+    const char* tcut_range = Form("%s && %s > %f && %s < %f",tcut,y_var,y1,y_var,y2);
+    
+    t->Draw(tgraph,tcut_range);
+    TH2 *hist = (TH2*)gDirectory->Get("hist");
+    hist->GetXaxis()->SetTitle(Form("E$_{reco}$ - E$_{true}$ [MeV]"));
+    hist->Fit("gaus","Q");
+    //gStyle->SetOptFit(11);
+    hist->SetTitle(Form("#DeltaE, E$_{true}$ = %f",y_int[i]));
+    
+    int n = hist->GetEntries();
+    
+    double sigma = hist->GetFunction("gaus")->GetParameter(2);
+    double sigma_err = hist->GetFunction("gaus")->GetParError(2);
+    double mean = hist->GetFunction("gaus")->GetParameter(1);
+    double mean_err = hist->GetFunction("gaus")->GetParError(1);
+    double res = hist->GetFunction("gaus")->GetParameter(2)/y_int[i];
+    double res_err = res * sqrt(1/n + (sigma_err/sigma)*(sigma_err/sigma));
+    
+    if(args>3){
+      std::ofstream res_save;
+      res_save.open (Form("%s.txt",res_file),std::ios_base::app);
+      res_save << "E = " << y_int[i] << " +/- " << interval/sqrt(12) << "\n";
+      res_save << "sigma = " << sigma << " +/- " << sigma_err << "\n";
+      res_save << "resolution = " << res << " +/- " << res_err << "\n";
+      res_save << "mean = " << mean << " +/- " << mean_err << "\n\n";
+      res_save.close();
+    }
+  
+    resolution.push_back(res);
+    resolution_err.push_back(res_err);
+    
+    delete hist;
+    delete fit_canvas;
+  
+  }
+  
+  std::vector<std::vector<double>> res_plus_err;
+  res_plus_err.push_back(resolution);
+  res_plus_err.push_back(resolution_err);
+  res_plus_err.push_back(y_int);
 
-  // check if minimum arguments exist
-  if (argc<5)
+  delete f;
+
+  return res_plus_err;
+
+}
+
+Double_t fit_func(Double_t *x, Double_t *par){
+
+  Double_t fitval = par[0]/sqrt(x[0]) + par[1] + par[2]/x[0];
+
+  return fitval;
+
+}
+
+std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_plus_err,double interval, const char* fit_file, const char* plot_name, int args){
+
+  std::vector<double> resolution = res_plus_err[0];
+  std::vector<double> resolution_err = res_plus_err[1];
+  std::vector<double> energy = res_plus_err[2];
+  const int n = energy.size();
+  
+  double res_arr[n];
+  std::copy(resolution.begin(),resolution.end(),res_arr);
+  double res_err_arr[n];
+  std::copy(resolution_err.begin(),resolution_err.end(),res_err_arr);
+  double en_arr[n];
+  std::copy(energy.begin(),energy.end(),en_arr);
+  
+  double en_err[n];
+  std::fill_n(en_err, n, interval/sqrt(12));
+  
+  //float x_min = en_arr[0];
+  //float x_max = en_arr[n-1];
+  
+  TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
+  graph->SetMarkerStyle(2);
+  graph->SetMarkerColor(1);
+  graph->SetLineColor(1);
+  TCanvas *canvas = new TCanvas("Resolution", "Resolution");
+  graph->GetXaxis()->SetTitle("E_{MC} [MeV]");
+  graph->GetYaxis()->SetTitle("#sigma_{E}/E_{MC}");
+  graph->GetYaxis()->SetTitleOffset(1.1);
+  graph->SetTitle("Resolution using Photoelectrons");
+  graph->Draw("AP");
+  
+  TF1 *fitfn = new TF1("fitfn",fit_func,en_arr[0],en_arr[n-1],3);
+  fitfn->SetParameter(0,0);
+  fitfn->SetParameter(1,0);
+  fitfn->SetParameter(2,0);
+  
+  graph->Fit("fitfn","Q0");
+  fitfn->SetLineColor(6);
+  fitfn->SetLineStyle(2);
+  fitfn->Draw("Same");
+  
+  TF1 *fitresult = graph->GetFunction("fitfn");
+
+  double a = fitresult->GetParameter(0);
+  double a_err = fitresult->GetParError(0);
+  double b = fitresult->GetParameter(1);
+  double b_err = fitresult->GetParError(1);
+  double c = fitresult->GetParameter(2);
+  double c_err = fitresult->GetParError(2);
+  
+  TLegend *leg = new TLegend(.55,.7,.9,.9);
+  leg->SetFillColor(0);
+  graph->SetFillColor(0);
+  leg->AddEntry(graph,"resolution (pe)","lE");
+  leg->AddEntry(fitfn,Form("%.3f/#sqrt{E} + %.3f + %.3f/E",a,b,c));
+  leg->SetTextSize(0.03);
+  leg->DrawClone("Same");
+  
+  if(args>4){
+    canvas->SaveAs(Form("%s.pdf",plot_name),"Q");
+  }
+  canvas->Draw();
+  
+  std::vector<double> params;
+  std::vector<double> params_err;
+  std::vector<std::vector<double>> parameters;
+  
+  params.push_back(a);
+  params.push_back(b);
+  params.push_back(c);
+  
+  params_err.push_back(a_err);
+  params_err.push_back(b_err);
+  params_err.push_back(c_err);
+  
+  parameters.push_back(params);
+  parameters.push_back(params_err);
+  
+  if(args>2){
+    std::ofstream params_save;
+    params_save.open (Form("%s.txt",fit_file),std::ios_base::app);
+    params_save << "a = " << a << " +/- " << a_err << "\n";
+    params_save << "b = " << b << " +/- " << b_err << "\n";
+    params_save << "c = " << c << " +/- " << c_err << "\n";
+    params_save.close();
+  }
+  
+  
+  delete graph;
+  delete fitfn;
+  delete canvas;
+  
+  return parameters;
+
+}
+
+int main(int argc, char** argv) {
+
+  if (argc<2)
     {
       printf("Less than the required number of arguments\n");
       return -1;
     }
- 
-  //MC extraction
-  int detector_threshold = 9;
-  double charge_threshold = 0.25;
-  int id;
     
-  Int_t    gtid=0, mcid=0, subid=0, tot_nhit=0, vetoHit=0;
-  Int_t    innerHit=0,innerHitPrev=0,vetoHitPrev=0,triggers=0;
-
-  Double_t totPE=0., innerPE=0., vetoPE=0.;
-  Double_t mcx=0., mcy=0., mcz=0., mct=0., mcu=0., mcv=0., mcw=0.;
-  Double_t mcxprev=0., mcyprev=0., mczprev=0., mctprev=0., mcuprev=0., mcvprev=0., mcwprev=0.;
-  Double_t mc_energy=0., mc_energyPrev=0.;
-  Double_t timestamp=0., timestampPrev=0., dt_sub=0., dtPrev_us=0.;
-  Int_t sub_event_tally[20] = {};
-  Double_t pmtBoundR=0.,pmtBoundZ=0.;
-
-  // root stuff
-  TFile *f;
-  TTree *rat_tree,*run_tree,*data;
-  Int_t n_events;
-  TTree *run_summary;
-
-  // rat stuff
-  RAT::DS::Root *ds=new RAT::DS::Root();
-  RAT::DS::Run  *run=new RAT::DS::Run();
-  RAT::DS::EV *ev;
-  RAT::DS::PMTInfo *pmtinfo;
-  RAT::DS::MC *mc;
-  RAT::DS::MCParticle *prim;
-  RAT::DS::PMT *pmt;
-
-
-  // BONSAI stuff
-  float       hitpmt[5000][5];
-  int         event,sub_event,n,count;
-  int         inpmt,vetopmt;
-  int         pmtindex,hit,nhit;
-
-  // open input file
-  f= new TFile(argv[1]);
-
-  rat_tree=(TTree*) f->Get("T");
-  rat_tree->SetBranchAddress("ds", &ds);
-  run_tree=(TTree*) f->Get("runT");
-  if (rat_tree==0x0 || run_tree==0x0)
-    {
-      printf("can't find trees T and runT in this file\n");
-      return -1;
-    }
-  run_tree->SetBranchAddress("run", &run);
-  if (run_tree->GetEntries() != 1)
-    {
-      printf("More than one run! Ignoring all but the geometry for the first run\n");
-      //return -1;
-    }
-
-  // open output files
-  TFile *out=new TFile(argv[2],"RECREATE");
-  data=new TTree("data","low-energy detector-triggered events");
-  ofstream mc_csvfile;
-  mc_csvfile.open (argv[3],ofstream::trunc);
-  mc_csvfile << "# event, mcx,  mcy,  mcz,  mcu,  mcv,  mcw,  mct \n";
-  ofstream hit_csvfile;
-  hit_csvfile.open (argv[4],ofstream::trunc);
-  hit_csvfile << "# event, hit, x, y, z, q, id, t \n";
+  //default values here
   
-
-  //Define the Integer Tree Leaves
-  data->Branch("gtid",&gtid,"gtid/I");
-  data->Branch("mcid",&mcid,"mcid/I");
-  data->Branch("subid",&subid,"subid/I");
-  data->Branch("innerHit",&innerHit,"innerHit/I");//inner detector    
-  data->Branch("innerHitPrev",&innerHitPrev,"innerHitPrev/I");//inner detector
-  data->Branch("vetoHit",&vetoHit,"vetoHit/I");//veto detector
-  data->Branch("vetoHitPrev",&vetoHitPrev,"vetoHitPrev/I");//veto detector
-  //Define the double Tree Leaves
-  data->Branch("pe",&totPE,"pe/D");
-  data->Branch("innerPE",&innerPE,"innerPE/D");
-  data->Branch("vetoPE",&vetoPE,"vetoPE/D");
-  data->Branch("mc_energy",&mc_energy,"mc_energy/D");
-  data->Branch("mc_energyPrev",&mc_energyPrev,"mc_energyPrev/D");
-  data->Branch("mcx",&mcx,"mcx/D"); data->Branch("mcy",&mcy,"mcy/D");
-  data->Branch("mcz",&mcz,"mcz/D"); data->Branch("mct",&mct,"mct/D");
-  data->Branch("mcxprev",&mcxprev,"mcxprev/D"); data->Branch("mcyprev",&mcyprev,"mcyprev/D");
-  data->Branch("mczprev",&mczprev,"mczprev/D"); data->Branch("mctprev",&mctprev,"mctprev/D");
-  data->Branch("mcu",&mcu,"mcu/D"); data->Branch("mcv",&mcv,"mcv/D");
-  data->Branch("mcw",&mcw,"mcw/D"); 
-  data->Branch("mcuprev",&mcuprev,"mcuprev/D"); data->Branch("mcvprev",&mcvprev,"mcvprev/D");
-  data->Branch("mcwprev",&mcwprev,"mcwprev/D"); 
+  gROOT->SetBatch(kTRUE);
   
-  data->Branch("dt_sub", &dt_sub, "dt_sub/D"); //time of the sub-event trigger from start of the event mc
-  data->Branch("dtPrev_us",&dtPrev_us,"dtPrev_us/D"); //global time between consecutive events in us
-  data->Branch("timestamp",&timestamp,"timestamp/D"); //trigger time of sub event from start of run
-  data->Branch("timestampPrev",&timestampPrev,"timestampPrev/D"); //trigger time of sub event from start of run
-
-
-  run_summary=new TTree("runSummary","mc run summary");
-  run_summary->Branch("nEvents",&n_events,"nEvents/I");
-  run_summary->Branch("subEventTally",sub_event_tally,"subEventTally[20]/I");
-
-  run_tree->GetEntry(0);
-
-
-  // loop over PMTs and find positions and location of PMT support
-  pmtinfo=run->GetPMTInfo();
-  n=pmtinfo->GetPMTCount();
-  inpmt = 0; vetopmt =0;
-
-  //Determines the number of inner and veto pmts
-  for(pmtindex=0; pmtindex<n; pmtindex++)
-    {
-      if (pmtinfo->GetType(pmtindex)==innerPMTcode)     ++inpmt;
-      else if (pmtinfo->GetType(pmtindex)==vetoPMTcode) ++vetopmt;
-      else
-	printf("PMT does not have valid identifier: %d \n",
-	       pmtinfo->GetType(pmtindex));
-    }
-  if (n != (inpmt+vetopmt))
-    printf("Mis-match in total PMT numbers: %d, %d \n",n, inpmt+vetopmt);
-    
-
-  // get pmt information
-  {
-    float xyz[3*inpmt+1];
-
-    printf("In total there are  %d PMTs in WATCHMAN\n",n);
-    
-    for(pmtindex=count=0; pmtindex<n; pmtindex++)
-      {
-	if(pmtinfo->GetType(pmtindex)==innerPMTcode)
-	  {
-	    TVector3 pos=pmtinfo->GetPosition(pmtindex);
-	    xyz[3*count]=pos[0]*0.1;
-	    xyz[3*count+1]=pos[1]*0.1;
-	    xyz[3*count+2]=pos[2]*0.1;
-	    if (pos[0]>pmtBoundR) pmtBoundR = pos[0];
-	    if (pos[2]>pmtBoundZ) pmtBoundZ = pos[2];
-	    ++count;
-	  }
-      }
-    
-    printf("There are %d inner pmts and %d veto pmts \n ",inpmt,vetopmt);
-    printf("Inner PMT boundary (r,z):(%4.1f mm %4.1f, mm)\n",pmtBoundR,pmtBoundZ);
-
-    if (count!= inpmt)
-      printf("There is a descrepancy in inner PMTS %d vs %d",count,inpmt);
-
+  const char* file = argv[1]; //input file
+  int args = argc; //number of arguments
+  const char* fit_file;
+  const char* res_file;
+  const char* plot_name;
+  
+  switch(argc) {
+    case 2:
+      printf("\nOnly input file provided, all other values set to default.\n");
+      break;
+    case 3:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      printf("\n\nSaving fit parameters to %s.txt.\n\n",fit_file);
+      break;
+    case 4:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      res_file = argv[3]; //output file for resolution
+      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt.\n\n",fit_file,res_file);
+      break;
+   case 5:
+      fit_file = argv[2]; //output file for fit parameters + resolution fit
+      res_file = argv[3]; //output file for resolution
+      plot_name = argv[4];
+      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
+      break;
+   /*case 6:
+      const char* fit_file = argv[2]; //output file for fit parameters + resolution fit
+      const char* res_file = argv[3]; //output file for resolution
+      const char* plot_name = argv[4];
+      apply = atoi(argv[5]);
+      prinf("\nSaving fit parameters to %s, resolution to %s. Plotting resolution as %s and applying fit parameters to %s.\n",fit_file,res_file,plot_name,fit_file);
+      break;*/
   }
+  
+  //need function to apply fit parameters
+  
+  //pe_E(file);
+  
+  const char* x_var = "innerPE";
+  const char* y_var = "mc_energy";
+  const char* tcut = "innerPE>0.25";
 
-  n_events = rat_tree->GetEntries();
-  // loop over all events
-  for (event = 0; event < n_events; event++)
-    {
-      if (event%1000==0)
-        printf("Evaluating event %d of %d (%d sub events)\n",event,n_events,
-	      ds->GetEVCount());
-      rat_tree->GetEntry(event);
+  double interval = 0.25;
 
-
-      sub_event_tally[ds->GetEVCount()]++;
-      // loop over all subevents
-      for(sub_event=0;sub_event<ds->GetEVCount();sub_event++)
-        {
-        gtid += 1;
-        mcid = event;
-        subid = sub_event;
-     
-        ev = ds->GetEV(sub_event);
-        totPE = ev->GetTotalCharge();
-
-        mc_energyPrev = mc_energy;
-        mcxprev = mcx;mcyprev=mcy;mczprev=mcz;
-
-        TVector3 temp;
-      
-        mc = ds->GetMC();
-        prim = mc->GetMCParticle(sub_event); 
-        mc_energy = prim->GetKE();
-        temp = prim->GetPosition();
-        mcx = temp.X();
-        mcy = temp.Y();
-        mcz = temp.Z();
-        mct    = prim->GetTime(); // local emission time
-        if (subid>0)
-          {
-          temp = prim->GetEndPosition();
-          mcx = temp.X(); 
-          mcy = temp.Y(); 
-          mcz = temp.Z(); 
-          mct    = prim->GetEndTime(); // should be the time of the neutron capture, may cause an issue with re-triggers
-          }
-        // get true event timings
-        // times are in ns unless specified
-        timestamp = 1e6*mc->GetUTC().GetSec() + 1e-3*mc->GetUTC().GetNanoSec() + 1e-3*ev->GetCalibratedTriggerTime() - 1e6*run->GetStartTime().GetSec()-1e-3*run->GetStartTime().GetNanoSec(); //global time of subevent trigger (us)
-        dtPrev_us = timestamp-timestampPrev; //time since the previous trigger (us)
-        dt_sub = ev->GetCalibratedTriggerTime(); //trigger time (first pmt hit time) from start of event mc
-
-        nhit=ev->GetPMTCount();
-
-        // loop over all PMT hits for each subevent
-        innerPE=0;vetoPE=0;    
-        for(hit=innerHit=vetoHit=0; hit<nhit; hit++)
-          {
-          pmt=ev->GetPMT(hit);
-          id = pmt->GetID();
-          //only use information from the inner pmts
-          if(pmtinfo->GetType(id) == innerPMTcode)
-            {
-            TVector3 pos=pmtinfo->GetPosition(id);
-            hitpmt[innerHit][0]=pos[0]*0.1;    //x
-            hitpmt[innerHit][1]=pos[1]*0.1;       //y
-            hitpmt[innerHit][2]=pos[2]*0.1;       //z
-            hitpmt[innerHit][3]=pmt->GetTime();   //t
-            hitpmt[innerHit][4]=pmt->GetCharge(); //q
-            innerPE += pmt->GetCharge();
-            hit_csvfile << event << "," << hit << "," << pos[0]*0.1 << "," << pos[1]*0.1 << "," << pos[2]*0.1 << "," << pmt->GetCharge() << "," << id << "," << pmt->GetTime() << "\n";
-            innerHit++;
-            }
-          else if(pmtinfo->GetType(id)== vetoPMTcode)
-            {
-            vetoPE += pmt->GetCharge();    
-            vetoHit++;
-            }
-          else
-            printf("Unidentified PMT type: (%d,%d) \n",count,pmtinfo->GetType(id));
-          } // end of loop over all PMT hits
-        if (innerHit<detector_threshold)
-          {
-          continue;
-          }
-        triggers++;
-
-        // get momentum vector and normalize it (find direction)
-        temp = prim->GetMomentum();
-        temp = temp.Unit();
-        mcu = temp.X();mcv = temp.Y();mcw = temp.Z();
-        data->Fill();
-
-	// write the mc data to the other csvfile
-	mc_csvfile << event << "," << mcx << "," << mcy << "," << mcz << "," << mcu << "," << mcv << "," << mcw << "," << mct << "\n";
-        //save reference values for the next subevent
-        mc_energyPrev = mc_energy;
-        mcxprev = mcx;mcyprev=mcy;mczprev=mcz;
-        timestampPrev = timestamp;
-        innerHitPrev = innerHit;
-        vetoHitPrev = vetoHit;
-      } 
-    }
-  cout << triggers << " triggered events" << endl;
-  out->cd();
-  data->Write();
-  run_summary->Fill();
-  run_summary->Write();
-  out->Close();
-  //End of MC extraction
+  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut, fit_file, args);
+  
+  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval,res_file,args);
+  
+  std::vector<std::vector<double>> res_parameters = plot_res(res,interval,fit_file,plot_name,args);
   
   return 0;
+  
 }

@@ -1,5 +1,5 @@
-#ifndef PE_E_H
-#define PE_E_H
+#ifndef EFIT_H
+#define EFIT_H
 
 #include <iostream>
 #include <fstream>
