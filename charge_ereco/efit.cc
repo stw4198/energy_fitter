@@ -289,51 +289,6 @@ int main(int argc, char** argv)
   run_summary->Write();
   out->Close();
   //End of MC extraction
-
-  /*const char* file = argv[2];
-  const char* x_var = "innerPE";
-  const char* y_var = "trueEnergy";
-  const char* tcut = Form("innerPE>%f",charge_threshold);
-  double interval = 0.25;
-  
-  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut);
-  std::vector<double> param = params[0];
-  std::vector<double> param_err = params[1];
-  double p0 = param[0];
-  double p1 = param[1];
-  double p0_err = param_err[0];
-  double p1_err = param_err[1];
-  printf("\np0 = %f +/- %f\np1 = %f +/- %f\n", p0, p0_err, p1, p1_err);
-  
-  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval);
-  std::vector<double> resolutions = res[0];
-  std::vector<double> resolutions_err = res[1];
-  std::vector<double> en = res[2];
-  
-  printf("\nE = %f, res = %f +/- %f\n",en[0],resolutions[0],resolutions_err[0]);
-  printf("\nE = %f, res = %f +/- %f\n",en[1],resolutions[1],resolutions_err[1]);
-  printf("\nE = %f, res = %f +/- %f\n",en[2],resolutions[2],resolutions_err[2]);
-  printf("\nE = %f, res = %f +/- %f\n",en[3],resolutions[3],resolutions_err[3]);
-  printf("\nE = %f, res = %f +/- %f\n",en[4],resolutions[4],resolutions_err[4]);
-  printf("\nE = %f, res = %f +/- %f\n",en[5],resolutions[5],resolutions_err[5]);
-  printf("\nE = %f, res = %f +/- %f\n",en[6],resolutions[6],resolutions_err[6]);
-  printf("\nE = %f, res = %f +/- %f\n",en[7],resolutions[7],resolutions_err[7]);
-  printf("\nE = %f, res = %f +/- %f\n",en[8],resolutions[8],resolutions_err[8]);
-  printf("\nE = %f, res = %f +/- %f\n",en[9],resolutions[9],resolutions_err[9]);
-  
-  std::vector<std::vector<double>> res_parameters = plot_res(res,interval);
-  std::vector<double> res_params = res_parameters[0];
-  double a = res_params[0];
-  double b = res_params[1];
-  double c = res_params[2];
-  
-  std::vector<double> res_params_err = res_parameters[1];
-  double a_err = res_params_err[0];
-  double b_err = res_params_err[1];
-  double c_err = res_params_err[2];
-  
-  printf("\nresolution = %f/root(E) + %f + %f/E\n",a,b,c);
-  printf("\na = %f +/- %f, b = %f +/- %f, c = %f +/- %f\n",a,a_err,b,b_err,c,c_err);*/
   
   return 0;
 }
