@@ -1,14 +1,6 @@
 #ifndef PE_E_H
 #define PE_E_H
 
-#include <RAT/DS/Run.hh>
-#include <RAT/DS/PMTInfo.hh>
-#include <RAT/DS/Root.hh>
-#include <RAT/DS/MC.hh>
-#include <RAT/DS/MCParticle.hh>
-#include <RAT/DS/EV.hh>
-#include <RAT/DS/PMT.hh>
-
 #include <TROOT.h>
 #include <TFile.h>
 #include <TTree.h>

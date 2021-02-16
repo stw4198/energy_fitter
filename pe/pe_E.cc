@@ -4,14 +4,6 @@
 #include <iomanip>
 #include <math.h>
 
-#include <RAT/DS/Run.hh>
-#include <RAT/DS/PMTInfo.hh>
-#include <RAT/DS/Root.hh>
-#include <RAT/DS/MC.hh>
-#include <RAT/DS/MCParticle.hh>
-#include <RAT/DS/EV.hh>
-#include <RAT/DS/PMT.hh>
-
 #include <TROOT.h>
 #include <TFile.h>
 #include <TTree.h>
@@ -23,21 +15,26 @@
 #include "TF1.h"
 #include "TH2.h"
 
-int main(){
+/*int main(int argc, char** argv){
 
-  void pe_E();
+  void pe_E(int argc, char** argv);
 
-  return 1;
+  TApplication app("Energy Fitter", &argc, argv);
+  pe_E(app.Argc(),app.Argv());
+  app.Run();
 
-}
+  return 0;
 
-void pe_E(){
+}*/
+
+void pe_E(const char* file/*int argc, char** argv*/){
 
   gROOT->SetBatch(kTRUE);
 
-  const char* file = "../../merged_flat_MC_wbls_3pc_baseline.root";
+  //const char* file = "MC.root";
+  //const char* file = argv[1];
   const char* x_var = "innerPE";
-  const char* y_var = "trueEnergy";
+  const char* y_var = "mc_energy";
   const char* tcut = "innerPE>0.25";
 
   double interval = 0.25;
@@ -140,7 +137,9 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
   std::vector<double> y_int = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; //set dynamically
   //std::vector<double> y_int = {0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5};
   
-  for(int i = 0; i<y_int.size(); i++) {
+  int y_n = y_int.size();
+  
+  for(int i = 0; i<y_n; i++) {
   
     double y1 = y_int[i] - interval;
     double y2 = y_int[i] + interval;
@@ -272,3 +271,11 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
   return parameters;
 
 }
+
+/*int main() {
+
+  const char* file = "MC.root";
+  pe_E(file);
+  return 0;
+  
+}*/

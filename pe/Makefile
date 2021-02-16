@@ -6,7 +6,7 @@ ifeq ($(MAKECMDGOALS),)
 endif
 
 RAT_LIBS = -L$(RATROOT)/lib -lRATEvent -lRATPAC -L$(ROOTSYS)/lib -lCore -lRIO -lTree -lPhysics -lMathCore
-ROOT_FLAG = `root-config --cflags --glibs`
+ROOT_FLAG = `root-config --cflags --libs`
 
 
 LIBRARIES  := $(LIBRARIES) -L$(ROOTSYS)/lib -L$(RATROOT)/lib $(RAT_LIBS)
