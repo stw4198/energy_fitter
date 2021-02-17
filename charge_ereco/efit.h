@@ -14,8 +14,6 @@
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TH2.h"
-#include "TTreeReader.h"
-#include "TTreeReaderValue.h"
 
 std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* x_var, const char* y_var, const char* tcut, const char* fit_file, int args);
 
