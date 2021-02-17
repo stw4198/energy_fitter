@@ -229,6 +229,79 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
 
 }
 
+int apply_fit(const char* file, std::vector<double> var, std::vector<std::vector<double>> fit_params, std::vector<std::vector<double>> res_params){
+ 
+  double E = 0;
+  double deltaE = 0;
+
+  TFile* f = new TFile(file,"UPDATE");
+  TTree *t = (TTree*)f->Get("data");
+  t->Branch("E",&E,"E/D");
+  t->Branch("deltaE",&deltaE,"deltaE/D");
+  
+  int n = var.size();
+  
+  std::vector<double> fit_parameters = fit_params[0];
+  std::vector<double> fit_errs = fit_params[1];
+  double p0 = fit_parameters[0];
+  double p1 = fit_parameters[1];
+  //double p0_err = fit_errs[0];
+  //double p1_err = fit_errs[1];
+  
+  std::vector<double> res_parameters = res_params[0];
+  std::vector<double> res_errs = res_params[1];
+  double a = res_parameters[0];
+  double b = res_parameters[1];
+  double c = res_parameters[2];
+  
+  
+  for(int i = 0;i<n;i++){
+  
+    E = p1*var[i] + p0;
+    deltaE = E * (a/sqrt(E) + b + c/E);
+    t->Fill();
+  
+  }
+  f->cd();
+  t->Write();
+  f->Close();
+  
+  delete f;
+  
+  return 0;
+  
+}
+
+/*std::vector<double> read_from_tree(const char* file){
+
+  //double innerPE=0;
+
+  TFile* f = new TFile(file);
+  TTree *t = (TTree*)f->Get("data");
+  
+  //TBranch *innerPE = (TBranch*)t->Branch("innerPE",&innerPE);
+  
+  //TTreeReader reader(t,f);
+  
+  //TTreeReaderValue<float_t> values(reader,var_name);
+
+  //std::vector<double> values = t->AsMatrix(columns=[br_name]);
+  
+  std::vector<double> values;
+  
+  for(int i; i<t->GetEntries();i++){
+  
+  	t->GetEntry(i);
+  	Double_t entry = t->GetLeaf("innerPE")->GetValue(0);
+  	printf("innerPE = %f\n",entry);
+  	values.push_back(entry);
+  
+  }
+
+  return values;
+
+}*/
+
 int main(int argc, char** argv) {
 
   if (argc<2)
@@ -290,6 +363,68 @@ int main(int argc, char** argv) {
   std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval,res_file,args);
   
   std::vector<std::vector<double>> res_parameters = plot_res(res,interval,fit_file,plot_name,args);
+  
+  /*TFile* f = new TFile(file, "UPDATE");
+  TTree *t = (TTree*)f->Get("data");
+  
+  double E = 0;
+  double deltaE = 0;
+  
+  TBranch *E_b = t->GetBranch("E");
+  t->GetListOfBranches()->Remove(E_b);
+  TLeaf* E_l = t->GetLeaf("E");
+  t->GetListOfLeaves()->Remove(E_l);
+  t->Write();
+
+  //TFile* f = new TFile(file,"UPDATE");
+  //TTree *t = (TTree*)f->Get("data");
+  t->Branch("E",&E,"E/D");
+  t->Branch("deltaE",&deltaE,"deltaE/D");
+  
+  int n = t->GetEntries();
+  
+  std::vector<double> fit_parameters = params[0];
+  double p0 = fit_parameters[0];
+  double p1 = fit_parameters[1];
+  //double p0_err = fit_errs[0];
+  //double p1_err = fit_errs[1];
+  
+  std::vector<double> res_params = res_parameters[0];
+  double a = res_params[0];
+  double b = res_params[1];
+  double c = res_params[2];
+  
+  //std::vector<double> values;
+  
+  for(int i = 0; i<n;i++){
+  
+    t->GetEntry(i);
+    Double_t entry = t->GetLeaf("innerPE")->GetValue(0);
+    E = p1*entry + p0;
+    deltaE = E * (a/sqrt(E) + b + c/E);
+    t->Fill();
+    printf("event [%i]: E = %f \n",i,E);
+    //values.push_back(entry);
+  
+  }
+  
+  //for(int i = 0;i<n;i++){
+  //
+  //  E = p1*var[i] + p0;
+  //  deltaE = E * (a/sqrt(E) + b + c/E);
+  //  t->Fill();
+  //
+  //}
+  //t->Fill();
+  f->cd();
+  t->Write();
+  f->Close();
+  
+  delete f;
+  
+  //int apply_fit(file, values, fit_params, res_parameters)
+  
+  //delete f;*/
   
   return 0;
   
