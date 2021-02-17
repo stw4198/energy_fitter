@@ -8,4 +8,6 @@ To extract MC information, do ./MCextract {input}.root {output}.root {event info
 
 To calculate energy fits, do ./efit {input}.root {fit parameter file} {resolution file} {plot name}
 
+Only {input}.root is needed for efit, all other inputs are optional and their file type is not needed.
+
 The input for efit should be the output of FRED or MCextract
