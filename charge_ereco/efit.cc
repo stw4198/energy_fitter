@@ -20,14 +20,6 @@ std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* 
   double p0_err = fitresult->GetParError(0);
   double p1_err = fitresult->GetParError(1);
   
-  if(args>2){
-    std::ofstream params_save;
-    params_save.open (Form("%s.txt",fit_file));
-    params_save << "p0 = " << p0 << " +/- " << p0_err << "\n";
-    params_save << "p1 = " << p1 << " +/- " << p1_err << "\n";
-    params_save.close();
-  }
-  
   std::vector<double> params;
   std::vector<double> param_errs;
   
@@ -47,7 +39,7 @@ std::vector<std::vector<double>> FitParams_Linear(const char* file, const char* 
   return parameters;
 }
 
-std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, double interval, const char* res_file, int args){
+std::vector<std::vector<double>> resolution(const char* file, const char* x_var, const char* y_var, const char* tcut, std::vector<std::vector<double>> params, std::vector<double> y_int, double interval, const char* res_file, int args){
 
   std::vector<double> fit = params[0];
   std::vector<double> fit_err = params[1];
@@ -55,15 +47,10 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
   std::vector<double> resolution;
   std::vector<double> resolution_err;
   
-  //gROOT->SetBatch(True);
-  
   TFile* f = new TFile(file);
   TTree *t = (TTree*)f->Get("data");
   
   const char* tgraph = Form("(%f*%s) + (%f) - %s>>hist",fit[1],x_var,fit[0],y_var);
-  
-  std::vector<double> y_int = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}; //set dynamically
-  //std::vector<double> y_int = {0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,8.5,9,9.5};
   
   int y_n = y_int.size();
   
@@ -84,7 +71,6 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
     TH2 *hist = (TH2*)gDirectory->Get("hist");
     hist->GetXaxis()->SetTitle(Form("E$_{reco}$ - E$_{true}$ [MeV]"));
     hist->Fit("gaus","Q");
-    //gStyle->SetOptFit(11);
     hist->SetTitle(Form("#DeltaE, E$_{true}$ = %f",y_int[i]));
     
     int n = hist->GetEntries();
@@ -150,9 +136,6 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
   double en_err[n];
   std::fill_n(en_err, n, interval/sqrt(12));
   
-  //float x_min = en_arr[0];
-  //float x_max = en_arr[n-1];
-  
   TGraphErrors *graph = new TGraphErrors(n,en_arr,res_arr,en_err,res_err_arr);
   graph->SetMarkerStyle(2);
   graph->SetMarkerColor(1);
@@ -209,17 +192,7 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
   params_err.push_back(c_err);
   
   parameters.push_back(params);
-  parameters.push_back(params_err);
-  
-  if(args>2){
-    std::ofstream params_save;
-    params_save.open (Form("%s.txt",fit_file),std::ios_base::app);
-    params_save << "a = " << a << " +/- " << a_err << "\n";
-    params_save << "b = " << b << " +/- " << b_err << "\n";
-    params_save << "c = " << c << " +/- " << c_err << "\n";
-    params_save.close();
-  }
-  
+  parameters.push_back(params_err);  
   
   delete graph;
   delete fitfn;
@@ -229,79 +202,6 @@ std::vector<std::vector<double>> plot_res(std::vector<std::vector<double>> res_p
 
 }
 
-int apply_fit(const char* file, std::vector<double> var, std::vector<std::vector<double>> fit_params, std::vector<std::vector<double>> res_params){
- 
-  double E = 0;
-  double deltaE = 0;
-
-  TFile* f = new TFile(file,"UPDATE");
-  TTree *t = (TTree*)f->Get("data");
-  t->Branch("E",&E,"E/D");
-  t->Branch("deltaE",&deltaE,"deltaE/D");
-  
-  int n = var.size();
-  
-  std::vector<double> fit_parameters = fit_params[0];
-  std::vector<double> fit_errs = fit_params[1];
-  double p0 = fit_parameters[0];
-  double p1 = fit_parameters[1];
-  //double p0_err = fit_errs[0];
-  //double p1_err = fit_errs[1];
-  
-  std::vector<double> res_parameters = res_params[0];
-  std::vector<double> res_errs = res_params[1];
-  double a = res_parameters[0];
-  double b = res_parameters[1];
-  double c = res_parameters[2];
-  
-  
-  for(int i = 0;i<n;i++){
-  
-    E = p1*var[i] + p0;
-    deltaE = E * (a/sqrt(E) + b + c/E);
-    t->Fill();
-  
-  }
-  f->cd();
-  t->Write();
-  f->Close();
-  
-  delete f;
-  
-  return 0;
-  
-}
-
-/*std::vector<double> read_from_tree(const char* file){
-
-  //double innerPE=0;
-
-  TFile* f = new TFile(file);
-  TTree *t = (TTree*)f->Get("data");
-  
-  //TBranch *innerPE = (TBranch*)t->Branch("innerPE",&innerPE);
-  
-  //TTreeReader reader(t,f);
-  
-  //TTreeReaderValue<float_t> values(reader,var_name);
-
-  //std::vector<double> values = t->AsMatrix(columns=[br_name]);
-  
-  std::vector<double> values;
-  
-  for(int i; i<t->GetEntries();i++){
-  
-  	t->GetEntry(i);
-  	Double_t entry = t->GetLeaf("innerPE")->GetValue(0);
-  	printf("innerPE = %f\n",entry);
-  	values.push_back(entry);
-  
-  }
-
-  return values;
-
-}*/
-
 int main(int argc, char** argv) {
 
   if (argc<2)
@@ -309,8 +209,6 @@ int main(int argc, char** argv) {
       printf("Less than the required number of arguments\n");
       return -1;
     }
-    
-  //default values here
   
   gROOT->SetBatch(kTRUE);
   
@@ -326,31 +224,20 @@ int main(int argc, char** argv) {
       break;
     case 3:
       fit_file = argv[2]; //output file for fit parameters + resolution fit
-      printf("\n\nSaving fit parameters to %s.txt.\n\n",fit_file);
+      printf("\n\nSaving fit parameters to %s.csv.\n\n",fit_file);
       break;
     case 4:
       fit_file = argv[2]; //output file for fit parameters + resolution fit
       res_file = argv[3]; //output file for resolution
-      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt.\n\n",fit_file,res_file);
+      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.txt.\n\n",fit_file,res_file);
       break;
    case 5:
       fit_file = argv[2]; //output file for fit parameters + resolution fit
       res_file = argv[3]; //output file for resolution
       plot_name = argv[4];
-      printf("\n\nSaving fit parameters to %s.txt, resolution to %s.txt. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
+      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.txt. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
       break;
-   /*case 6:
-      const char* fit_file = argv[2]; //output file for fit parameters + resolution fit
-      const char* res_file = argv[3]; //output file for resolution
-      const char* plot_name = argv[4];
-      apply = atoi(argv[5]);
-      prinf("\nSaving fit parameters to %s, resolution to %s. Plotting resolution as %s and applying fit parameters to %s.\n",fit_file,res_file,plot_name,fit_file);
-      break;*/
   }
-  
-  //need function to apply fit parameters
-  
-  //pe_E(file);
   
   const char* x_var = "innerPE";
   const char* y_var = "mc_energy";
@@ -358,73 +245,35 @@ int main(int argc, char** argv) {
 
   double interval = 0.25;
 
-  std::vector<std::vector<double>> params = FitParams_Linear(file, x_var, y_var, tcut, fit_file, args);
+  std::vector<std::vector<double>> fit_parameters = FitParams_Linear(file, x_var, y_var, tcut, fit_file, args);
+  std::vector<double> fit_params = fit_parameters[0];
+  std::vector<double> fit_err_params = fit_parameters[1];
+  double p0 = fit_params[0];
+  double p1 = fit_params[1];
+  double p0_err = fit_err_params[0];
+  double p1_err = fit_err_params[1];
   
-  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,params,interval,res_file,args);
+  std::vector<double> energy = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  
+  std::vector<std::vector<double>> res = resolution(file, x_var, y_var, tcut,fit_parameters,energy,interval,res_file,args);
   
   std::vector<std::vector<double>> res_parameters = plot_res(res,interval,fit_file,plot_name,args);
-  
-  /*TFile* f = new TFile(file, "UPDATE");
-  TTree *t = (TTree*)f->Get("data");
-  
-  double E = 0;
-  double deltaE = 0;
-  
-  TBranch *E_b = t->GetBranch("E");
-  t->GetListOfBranches()->Remove(E_b);
-  TLeaf* E_l = t->GetLeaf("E");
-  t->GetListOfLeaves()->Remove(E_l);
-  t->Write();
-
-  //TFile* f = new TFile(file,"UPDATE");
-  //TTree *t = (TTree*)f->Get("data");
-  t->Branch("E",&E,"E/D");
-  t->Branch("deltaE",&deltaE,"deltaE/D");
-  
-  int n = t->GetEntries();
-  
-  std::vector<double> fit_parameters = params[0];
-  double p0 = fit_parameters[0];
-  double p1 = fit_parameters[1];
-  //double p0_err = fit_errs[0];
-  //double p1_err = fit_errs[1];
-  
   std::vector<double> res_params = res_parameters[0];
+  std::vector<double> res_err_params = res_parameters[1];
   double a = res_params[0];
   double b = res_params[1];
   double c = res_params[2];
+  double a_err = res_err_params[0];
+  double b_err = res_err_params[1];
+  double c_err = res_err_params[2];
   
-  //std::vector<double> values;
-  
-  for(int i = 0; i<n;i++){
-  
-    t->GetEntry(i);
-    Double_t entry = t->GetLeaf("innerPE")->GetValue(0);
-    E = p1*entry + p0;
-    deltaE = E * (a/sqrt(E) + b + c/E);
-    t->Fill();
-    printf("event [%i]: E = %f \n",i,E);
-    //values.push_back(entry);
-  
+  if(args>2){
+    std::ofstream params_csv;
+    params_csv.open (Form("%s.csv",argv[2]),std::ofstream::trunc);
+    params_csv << "# p0, p0_err, p1, p1_err, a, a_err, b, b_err, c, c_err, E = p1*innerPE +p0, res/E = a/sqrt(E) + b + c/E\n";
+    params_csv << p0 << ',' << p0_err << ',' << p1 << ',' << p1_err << ',' << a << ',' << a_err << ',' << b << ',' << b_err << ',' << c << ',' << c_err;
+    params_csv.close();
   }
-  
-  //for(int i = 0;i<n;i++){
-  //
-  //  E = p1*var[i] + p0;
-  //  deltaE = E * (a/sqrt(E) + b + c/E);
-  //  t->Fill();
-  //
-  //}
-  //t->Fill();
-  f->cd();
-  t->Write();
-  f->Close();
-  
-  delete f;
-  
-  //int apply_fit(file, values, fit_params, res_parameters)
-  
-  //delete f;*/
   
   return 0;
   
