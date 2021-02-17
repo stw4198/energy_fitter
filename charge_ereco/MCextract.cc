@@ -284,6 +284,8 @@ int main(int argc, char** argv)
   data->Write();
   run_summary->Fill();
   run_summary->Write();
+  mc_csvfile.close();
+  hit_csvfile.close();
   out->Close();
   //End of MC extraction
   
