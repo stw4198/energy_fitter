@@ -55,7 +55,7 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
   int y_n = y_int.size();
   
   if(args>3){
-  std::remove(Form("%s.txt",res_file));
+  std::remove(Form("%s.csv",res_file));
   }
   
   for(int i = 0; i<y_n; i++) {
@@ -83,13 +83,11 @@ std::vector<std::vector<double>> resolution(const char* file, const char* x_var,
     double res_err = res * sqrt(1/n + (sigma_err/sigma)*(sigma_err/sigma));
     
     if(args>3){
-      std::ofstream res_save;
-      res_save.open (Form("%s.txt",res_file),std::ios_base::app);
-      res_save << "E = " << y_int[i] << " +/- " << interval/sqrt(12) << "\n";
-      res_save << "sigma = " << sigma << " +/- " << sigma_err << "\n";
-      res_save << "resolution = " << res << " +/- " << res_err << "\n";
-      res_save << "mean = " << mean << " +/- " << mean_err << "\n\n";
-      res_save.close();
+      std::ofstream res_csv;
+      res_csv.open (Form("%s.csv",res_file),std::ofstream::app);
+      res_csv << "# E [MeV], E_err [MeV], sigma [MeV], sigma_err [MeV], mean [MeV], mean_err [MeV], resolution, resolution_err\n";
+      res_csv << y_int[i] << ',' << interval/sqrt(12) << ',' << sigma << ',' << sigma_err << ',' << mean << ',' << mean_err << ',' << res << ',' << res_err << '\n';
+      res_csv.close();
     }
   
     resolution.push_back(res);
@@ -229,13 +227,13 @@ int main(int argc, char** argv) {
     case 4:
       fit_file = argv[2]; //output file for fit parameters + resolution fit
       res_file = argv[3]; //output file for resolution
-      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.txt.\n\n",fit_file,res_file);
+      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.csv.\n\n",fit_file,res_file);
       break;
    case 5:
       fit_file = argv[2]; //output file for fit parameters + resolution fit
       res_file = argv[3]; //output file for resolution
       plot_name = argv[4];
-      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.txt. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
+      printf("\n\nSaving fit parameters to %s.csv, resolution to %s.csv. Plotting resolution as %s.pdf.\n\n",fit_file,res_file,plot_name);
       break;
   }
   
