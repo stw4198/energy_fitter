@@ -24,6 +24,12 @@ static const int vetoPMTcode  = 2;
 int main(int argc, char** argv)
 {
 
+  //set argv[3] to be efit on/off
+  //if statement, if efit 1, set relevant args
+  //infile outfile efit param files
+  //if efit 0, set relevant args
+  //infile outfile1 efit outfile2 param files...
+
   // check if minimum arguments exist
   if (argc<5)
     {
@@ -32,7 +38,7 @@ int main(int argc, char** argv)
     }
  
   //MC extraction
-  int detector_threshold = 9;
+  int detector_threshold = 9; //set as input
   double charge_threshold = 0.25;
   int id;
     
@@ -46,6 +52,8 @@ int main(int argc, char** argv)
   Double_t timestamp=0., timestampPrev=0., dt_sub=0., dtPrev_us=0.;
   Int_t sub_event_tally[20] = {};
   Double_t pmtBoundR=0.,pmtBoundZ=0.;
+  
+  double E = 0, dE = 0;
 
   // root stuff
   TFile *f;
